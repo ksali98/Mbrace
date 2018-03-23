@@ -7,9 +7,6 @@
 // Code working, tested 03/18/2018. I2C not tested, and no SD card connected.
 //  Kamal Ali
 
-// This is added to do somthign
-//////////////////////////////////GGGGGGGGGGGGG   hhhhhhhhhhhh
-
 
 #include <ESP8266WiFi.h>
 #include <Ticker.h>

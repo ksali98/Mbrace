@@ -13,6 +13,8 @@ void handle_input();
 void print_average();
 void update_count();
 
+//This is a test
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
