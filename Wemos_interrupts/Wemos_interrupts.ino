@@ -7,6 +7,11 @@
 // Code working, tested 03/18/2018. I2C not tested, and no SD card connected.
 //  Kamal Ali
 
+//Every time this code is used, a section will be added to Setup where experimt specific data
+//will be added. That shuold include experiment date, location and specifics that should be
+//written to the SD card.  Kamal Ali  03/27/2018
+
+
 
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
@@ -44,6 +49,12 @@ void setup() {
   // SD Card Setup
   SD.begin();
   dataFile = SD.open("WiFiA.txt", FILE_WRITE);  // Set file name to be created on SD card
+  // This part writes experiemnt specific data to SD card, Uncomment only prior to upload.
+  
+    dataFile.write("Experiment specific Data:");
+    dataFile.write("Date: 03/29/2018 | Location: GCRL |CodeFile:Wemos_interrupts   | DataFile: WiFiA.txt ");
+    dataFile.write("Comments: First WiFi experiemnt sending data to MBRACE.xyz, data_collector, with MAC as filename");
+    dataFile.flush();
 
   // I2C Setup
   Wire.begin();
