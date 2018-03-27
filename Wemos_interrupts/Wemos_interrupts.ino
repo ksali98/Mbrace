@@ -9,7 +9,7 @@
 
 //Every time this code is used, a section will be added to Setup where experimt specific data
 //will be added. That shuold include experiment date, location and specifics that should be
-//written to the SD card.  Kamal Ali  03/27/2018.
+//written to the SD card.  Kamal Ali  03/27/2018.....
 
 
 
