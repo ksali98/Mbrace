@@ -21,8 +21,8 @@
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together
-const char* ssid     = "Ellipsis Jetpack 5999";
-const char* password = "b0eaef67";
+const char* ssid     = "Mbrace_JSU";
+const char* password = "alialiali";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 byte val = 0;
