@@ -22,7 +22,7 @@
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together
 const char* ssid     = "Mbrace_JSU";
-const char* password = "alialiali";
+const char* password = "alialiali1";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 byte val = 0;
@@ -51,9 +51,9 @@ void setup() {
   dataFile = SD.open("WiFiA.txt", FILE_WRITE);  // Set file name to be created on SD card
   // This part writes experiemnt specific data to SD card, Uncomment only prior to upload.
   
-    dataFile.write("Experiment specific Data:");
-    dataFile.write("Date: 03/29/2018 | Location: GCRL |CodeFile:Wemos_interrupts   | DataFile: WiFiA.txt ");
-    dataFile.write("Comments: First WiFi experiemnt sending data to MBRACE.xyz, data_collector, with MAC as filename");
+    dataFile.write("Experiment specific Data: \r\n");
+    dataFile.write("Date: 03/29/2018 \r\n Location: GCRL |CodeFile:Wemos_interrupts  \r\n  DataFile: WiFiA.txt \r\n");
+    dataFile.write("Comments: First WiFi experiemnt sending data to MBRACE.xyz, data_collector, with MAC as filename\r\n\r\n\r\n");
     dataFile.flush();
 
   // I2C Setup
