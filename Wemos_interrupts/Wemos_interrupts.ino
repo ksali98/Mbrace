@@ -52,8 +52,8 @@ void setup() {
   // This part writes experiemnt specific data to SD card, Uncomment only prior to upload.
   
     dataFile.write("Experiment specific Data: \r\n");
-    dataFile.write("Date: 03/29/2018 \r\n Location: GCRL |CodeFile:Wemos_interrupts  \r\n  DataFile: WiFiA.txt \r\n");
-    dataFile.write("Comments: First WiFi experiemnt sending data to MBRACE.xyz, data_collector, with MAC as filename\r\n\r\n\r\n");
+    dataFile.write("Date: 03/29/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: WiFiA.txt \r\n");
+    dataFile.write("Comments: First WiFi experiemnt sending data to MBRACE.xyz, data_collector, with MAC as filename.\r\n\r\n\r\n");
     dataFile.flush();
 
   // I2C Setup
