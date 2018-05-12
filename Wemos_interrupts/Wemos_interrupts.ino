@@ -20,7 +20,10 @@
 #include <SPI.h>
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
-const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card
+const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
+const int readings_per_day = 864000;
+const char* file_prefix = "AAA";
+
 const char* ssid     = "Mbrace_JSU";
 const char* password = "alialiali1";
 const char* host = "mbrace.xyz";
@@ -29,6 +32,7 @@ byte val = 0;
 
 File dataFile;
 int payload_length = 0;
+int readings_done_today = 0;
 byte sensor_payload[byte_number*sensor_group_readings];
 byte output_payload[byte_number*sensor_group_readings];
 volatile bool interrupted = false;
@@ -45,18 +49,17 @@ void setup() {
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(100);
-    Serial.println(".");
   }
-  Serial.println("Connected");
-  
+  readings_done_today = get_time_in_seconds() * 10;
+
   // SD Card Setup
   SD.begin();
-  dataFile = SD.open("Wi-GCRL1.txt", FILE_WRITE);  // Set file name to be created on SD card
+  dataFile = SD.open("WiFiA.txt", FILE_WRITE);  // Set file name to be created on SD card
   // This part writes experiemnt specific data to SD card, Uncomment only prior to upload.
   
     dataFile.write("Experiment specific Data: \r\n");
-    dataFile.write("Date: 04/08/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: Wi_GCRL1.txt \r\n");
-    dataFile.write("Comments: TESTING sending data to MBRACE.xyz, data_collector, with MAC as filename.\r\n\r\n\r\n");
+    dataFile.write("Date: 03/29/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: WiFiA.txt \r\n");
+    dataFile.write("Comments: First WiFi experiemnt sending data to MBRACE.xyz, data_collector, with MAC as filename.\r\n\r\n\r\n");
     dataFile.flush();
 
   // I2C Setup
@@ -109,10 +112,10 @@ void ICACHE_RAM_ATTR onTimerISR(){
 void send_payload(byte *payload, int payload_size) {
 //  Serial.println("Sending payload"); //  Debug string
   WiFiClient client;
-    if (!client.connect(host, port)) {
-      Serial.println("connection failed");
-      return;
-    }
+  if (!client.connect(host, port)) {
+    Serial.println("connection failed");
+    return;
+  }
 
   byte request_string[10000];
   String start_string = String("GET /data_collector/?mac="+WiFi.macAddress()+"&data=");  // "POST http(s)://host:port/api/v1/0AaRkVNSDhBSdSC56AnS/telemetry"
@@ -123,7 +126,18 @@ void send_payload(byte *payload, int payload_size) {
 // Serial.println("sending data: " + start_string + middle_string + end_string);  //Debug string
 
   client.print(start_string + middle_string + end_string);
+}
 
+int get_time_in_seconds(){
+  WiFiClient client;
+  if (!client.connect(host, port)) {
+    Serial.println("connection failed");
+    return;
+  }
+  
+  String request_string = "GET /current_time.php HTTP/1.1\r\nHost:" + host + "\r\n\r\n";
+  client.print(request_string);
+  
 //  unsigned long timeout = millis();
 //  while (client.available() == 0) {
 //    if (millis() - timeout > 10000) {
@@ -133,11 +147,12 @@ void send_payload(byte *payload, int payload_size) {
 //    }
 //  }
 //  Serial.println("sent data");
-// //Read all the lines of the reply from server and print them to Serial
-// while(client.available()){
-//    String line = client.readStringUntil('\r');
-//    Serial.print(line);
-//  }
+ Read all the lines of the reply from server and print them to Serial
+ while(client.available()){
+    String line = client.readStringUntil('\r');
+    Serial.print(line);
+  }
+  return 10;
 }
 
 // Base64 Encoding and Decoding.......
