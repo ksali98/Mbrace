@@ -54,7 +54,7 @@ void setup() {
 
   // SD Card Setup
   SD.begin();
-  dataFile = SD.open("WiFiA.txt", FILE_WRITE);  // Set file name to be created on SD card
+  dataFile = SD.open("txt", FILE_WRITE);  // Set file name to be created on SD card
   // This part writes experiemnt specific data to SD card, Uncomment only prior to upload.
   
     dataFile.write("Experiment specific Data: \r\n");
@@ -132,10 +132,9 @@ int get_time_in_seconds(){
   WiFiClient client;
   if (!client.connect(host, port)) {
     Serial.println("connection failed");
-    return;
   }
   
-  String request_string = "GET /current_time.php HTTP/1.1\r\nHost:" + host + "\r\n\r\n";
+  String request_string = String("GET /current_time.php HTTP/1.1\r\nHost:") + host + "\r\n\r\n";
   client.print(request_string);
   
 //  unsigned long timeout = millis();
@@ -147,7 +146,7 @@ int get_time_in_seconds(){
 //    }
 //  }
 //  Serial.println("sent data");
- Read all the lines of the reply from server and print them to Serial
+//  Read all the lines of the reply from server and print them to Serial
  while(client.available()){
     String line = client.readStringUntil('\r');
     Serial.print(line);
