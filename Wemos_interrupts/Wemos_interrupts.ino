@@ -20,7 +20,7 @@
 #include <SPI.h>
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
-const int sensor_group_readings = 10;  // # of readings we will group together
+const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card
 const char* ssid     = "Mbrace_JSU";
 const char* password = "alialiali1";
 const char* host = "mbrace.xyz";
@@ -67,24 +67,12 @@ void setup() {
 }
 
 void loop() {
+  // If the payload is full, make a base64 encoded copy and send it over WIFI
   if (payload_length == byte_number*sensor_group_readings) {
-    dataFile.write("$$");
-    dataFile.write(sensor_payload, payload_length);
-    dataFile.flush();
     base64_encode((char*)output_payload, (char*)sensor_payload, payload_length);
     send_payload(output_payload, (payload_length)*4/3);
     payload_length = 0;
   }
-  if (interrupted) {
-  Wire.requestFrom(1, byte_number);
-  while (Wire.available()) {
-    for (int i = 0; i < byte_number; i++) {
-      sensor_payload[payload_length] = Wire.read();
-      payload_length++;
-    }
-   }
-  }
-  interrupted = false;
 }
 
 
@@ -93,7 +81,25 @@ void loop() {
 //ISR
 void ICACHE_RAM_ATTR onTimerISR(){
   timer1_write(500000);// We have been interrupted, come back in 100ms time
-  interrupted = true;
+  // Writing sensor data to the SD card if the payload array is full.
+  //   Once we are done, we reset the payload_length to 0 so the wifi send code
+  //   needs to run before that happens. (approx 100ms window between the end of the
+  //   interrupt(payload_length++) and the next call to the interrupt)
+  if (payload_length == byte_number*sensor_group_readings) {
+    dataFile.write("$$");
+    dataFile.write(sensor_payload, payload_length);
+    dataFile.flush();
+    payload_length = 0;
+  }
+ 
+  // Reading sensors
+  Wire.requestFrom(1, byte_number);
+  while (Wire.available()) {
+    for (int i = 0; i < byte_number; i++) {
+      sensor_payload[payload_length] = Wire.read();
+      payload_length++;
+    }
+  }
 }
 
 //Sending WiFi data..
@@ -115,14 +121,14 @@ void send_payload(byte *payload, int payload_size) {
 
   client.print(start_string + middle_string + end_string);
 
-  unsigned long timeout = millis();
-  while (client.available() == 0) {
-    if (millis() - timeout > 10000) {
-      Serial.println(">>> Client Timeout !");
-      client.stop();
-      return;
-    }
-  }
+//  unsigned long timeout = millis();
+//  while (client.available() == 0) {
+//    if (millis() - timeout > 10000) {
+//      Serial.println(">>> Client Timeout !");
+//      client.stop();
+//      return;
+//    }
+//  }
 //  Serial.println("sent data");
 // Read all the lines of the reply from server and print them to Serial
 // while(client.available()){
