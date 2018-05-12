@@ -20,9 +20,9 @@
 #include <SPI.h>
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
-const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card
+const int sensor_group_readings = 10;  // # of readings we will group together
 const char* ssid     = "Mbrace_JSU";
-const char* password = "alialiali1";
+const char* password = "alialiali";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 byte val = 0;
@@ -45,18 +45,15 @@ void setup() {
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(100);
-    Serial.println(".");
   }
-  Serial.println("Connected");
-  
   // SD Card Setup
   SD.begin();
-  dataFile = SD.open("Wi-GCRL1.txt", FILE_WRITE);  // Set file name to be created on SD card
+  dataFile = SD.open("WiFiA.txt", FILE_WRITE);  // Set file name to be created on SD card
   // This part writes experiemnt specific data to SD card, Uncomment only prior to upload.
   
-    dataFile.write("Experiment specific Data: \r\n");
-    dataFile.write("Date: 04/08/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: Wi_GCRL1.txt \r\n");
-    dataFile.write("Comments: TESTING sending data to MBRACE.xyz, data_collector, with MAC as filename.\r\n\r\n\r\n");
+    dataFile.write("Experiment specific Data:");
+    dataFile.write("Date: 03/29/2018 | Location: GCRL |CodeFile:Wemos_interrupts   | DataFile: WiFiA.txt ");
+    dataFile.write("Comments: First WiFi experiemnt sending data to MBRACE.xyz, data_collector, with MAC as filename");
     dataFile.flush();
 
   // I2C Setup
@@ -70,12 +67,24 @@ void setup() {
 }
 
 void loop() {
-  // If the payload is full, make a base64 encoded copy and send it over WIFI
   if (payload_length == byte_number*sensor_group_readings) {
+    dataFile.write("$$");
+    dataFile.write(sensor_payload, payload_length);
+    dataFile.flush();
     base64_encode((char*)output_payload, (char*)sensor_payload, payload_length);
     send_payload(output_payload, (payload_length)*4/3);
     payload_length = 0;
   }
+  if (interrupted) {
+  Wire.requestFrom(1, byte_number);
+  while (Wire.available()) {
+    for (int i = 0; i < byte_number; i++) {
+      sensor_payload[payload_length] = Wire.read();
+      payload_length++;
+    }
+   }
+  }
+  interrupted = false;
 }
 
 
@@ -84,25 +93,7 @@ void loop() {
 //ISR
 void ICACHE_RAM_ATTR onTimerISR(){
   timer1_write(500000);// We have been interrupted, come back in 100ms time
-  // Writing sensor data to the SD card if the payload array is full.
-  //   Once we are done, we reset the payload_length to 0 so the wifi send code
-  //   needs to run before that happens. (approx 100ms window between the end of the
-  //   interrupt(payload_length++) and the next call to the interrupt)
-  if (payload_length == byte_number*sensor_group_readings) {
-    dataFile.write("$$");
-    dataFile.write(sensor_payload, payload_length);
-    dataFile.flush();
-    payload_length = 0;
-  }
- 
-  // Reading sensors
-  Wire.requestFrom(1, byte_number);
-  while (Wire.available()) {
-    for (int i = 0; i < byte_number; i++) {
-      sensor_payload[payload_length] = Wire.read();
-      payload_length++;
-    }
-  }
+  interrupted = true;
 }
 
 //Sending WiFi data..
@@ -124,16 +115,16 @@ void send_payload(byte *payload, int payload_size) {
 
   client.print(start_string + middle_string + end_string);
 
-//  unsigned long timeout = millis();
-//  while (client.available() == 0) {
-//    if (millis() - timeout > 10000) {
-//      Serial.println(">>> Client Timeout !");
-//      client.stop();
-//      return;
-//    }
-//  }
+  unsigned long timeout = millis();
+  while (client.available() == 0) {
+    if (millis() - timeout > 10000) {
+      Serial.println(">>> Client Timeout !");
+      client.stop();
+      return;
+    }
+  }
 //  Serial.println("sent data");
-// //Read all the lines of the reply from server and print them to Serial
+// Read all the lines of the reply from server and print them to Serial
 // while(client.available()){
 //    String line = client.readStringUntil('\r');
 //    Serial.print(line);
