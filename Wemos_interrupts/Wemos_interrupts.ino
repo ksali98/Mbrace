@@ -54,7 +54,7 @@ void setup() {
 
   // SD Card Setup
   SD.begin();
-  dataFile = SD.open("txt", FILE_WRITE);  // Set file name to be created on SD card
+  dataFile = SD.open("WiFi_TT.txt", FILE_WRITE);  // Set file name to be created on SD card
   // This part writes experiemnt specific data to SD card, Uncomment only prior to upload.
   
     dataFile.write("Experiment specific Data: \r\n");
