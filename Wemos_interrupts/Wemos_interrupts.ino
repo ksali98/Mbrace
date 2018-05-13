@@ -11,14 +11,18 @@
 //will be added. That shuold include experiment date, location and specifics that should be
 //written to the SD card.  Kamal Ali  03/27/2018.....
 
+//As of 05/13/2018. This code is to write a single file a day on SD as well as on MBRACE.xyz 
+//data-collector folder. File name is 5 letters (Index) and a three digit running number.
+//Letters are Site, Device, Experiment code. See Readme for detials.
 
+//Amin Ali 05/13/2018
 
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
 #include <Wire.h>
 #include <SD.h>
 #include <SPI.h>
-#include <ArduinoHttpClient.h>
+#include <ArduinoHttpClient.h>  // This is used to help parse the response from time server
 
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
@@ -53,7 +57,7 @@ void setup() {
     delay(100);
   }
   readings_in_file = get_time_in_seconds() * 10;
-  Serial.println("Connected");
+  Serial.println("Connected") //Debug string hppens only once 
   
   // SD Card Setup
   SD.begin();
@@ -64,9 +68,10 @@ void setup() {
   dataFile.flush();
 
   // I2C Setup
-//  Wire.begin();
-//  Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
-//  delay(100);  // Short delay, wait for the Mate to send back CMD
+  Wire.begin();
+  Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
+  delay(100);  // Short delay, wait for the Mate to send back CMD
+  
   // ISR Setup
   timer1_attachInterrupt(onTimerISR);
   timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
@@ -79,7 +84,6 @@ void loop() {
     // marking the current full payload as sent so that we don't send it again if
     //   this loop is called before the next interrupt wipes the payload array
     payload_sent = true;
-    Serial.println("wifisend");
     base64_encode((char*)output_payload, (char*)sensor_payload, payload_length);
     send_payload(output_payload, (payload_length)*4/3);
   }
@@ -98,25 +102,22 @@ void ICACHE_RAM_ATTR onTimerISR(){
   //   interrupt(payload_length++) and the next call to the interrupt)
   if (payload_length == byte_number*sensor_group_readings) {
     open_file();
-    Serial.println("sdsend");
     dataFile.write("$$");
     dataFile.write(sensor_payload, payload_length);
     dataFile.flush();
 
     payload_length = 0;
     payload_sent = false;
-
   }
  
   // Reading sensors
-//  Wire.requestFrom(1, byte_number);
-//  while (Wire.available()) {
+  Wire.requestFrom(1, byte_number);
+  while (Wire.available()) {
     for (int i = 0; i < byte_number; i++) {
-      sensor_payload[payload_length] = i;//Wire.read();
+      sensor_payload[payload_length] = Wire.read();
       payload_length++;
     }
     readings_in_file++;
-//  }
 }
 
 //Sending WiFi data..
@@ -151,10 +152,6 @@ void open_file(){
     readings_in_file = 0;
     dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
   }
-//    dataFile.write("Experiment specific Data: \r\n");
-//    dataFile.write("Date: 03/29/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: WiFiA.txt \r\n");
-//    dataFile.write("Comments: First WiFi experiemnt sending data to MBRACE.xyz, data_collector, with MAC as filename.\r\n\r\n\r\n");
-//    dataFile.flush();
 }
 
 // Base64 Encoding and Decoding.......
