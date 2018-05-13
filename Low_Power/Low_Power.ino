@@ -9,8 +9,8 @@
 // MISO pin - 12
 // SCK pin  - 13
  
-#define DATA_LENGTH 800 //10 Second data Blocks
-byte sensors[DATA_LENGTH];
+int data_block = 0; //10 Second data Blocks
+byte sensors[800];
 File dataFile;
 const String file_prefix = String("AAAAA");
 int file_number = 0;
@@ -32,7 +32,7 @@ void setup() {
 }
     
 void loop() {
-  for(int i = 0; i < DATA_LENGTH; i++) {  // For a total of 800 bytes;
+  for(int i = 0; i < data_block; i++) {  // For a total of 800 bytes;
     if(i % 8 == 0 && i != 0) {
       // Sleep for selected time, after every 8 bytes
       readings_in_file++; // after reading sensors but before going to sleep, increment readings counter
@@ -47,7 +47,7 @@ void loop() {
     dataFile = SD.open(file_prefix + file_number, FILE_WRITE);  // Set file name to be created on SD card
   }
   dataFile.write("$$"); // write $$ and 800 bytes every 10 Seconds
-  dataFile.write(sensors, DATA_LENGTH);
+  dataFile.write(sensors, data_block);
   dataFile.flush();
 }
 
@@ -75,17 +75,24 @@ void sleep() {
 
 void set_readings_per_file(){
   switch (sleep_time) {
-    case 1:
+    case 1: // 10Hz  write every 800 bytes, 10 seconds
       readings_per_file = 864000;
+      data_block = 800;
       break;
-    case 2:
+    case 2: // 1Hz writes every 80 bytes, 10 seconds
       readings_per_file = 86400;
+      data_block = 80;
+
       break;
-    case 3:
+    case 3: // 1 minuet, writes every 80 bytes, 10 minutes
       readings_per_file = 1440;
+      data_block = 80;
+
       break;
-    case 4:
+    case 4: // 1 hour, writes every 8 bytes, 1 hour.
       readings_per_file = 24;
+      data_block = 8;
+
       break;
   }
 }
