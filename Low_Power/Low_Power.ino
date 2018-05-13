@@ -28,7 +28,7 @@ void setup() {
   pinMode(10, OUTPUT);
   SD.begin(10);
   dataFile = SD.open(file_prefix + file_number, FILE_WRITE);  // Set file name to be created on SD card
-  set_readings_per_file()
+  set_readings_per_file();
 }
     
 void loop() {
@@ -69,11 +69,7 @@ void sleep() {
     case 4:
         for(int j = 0; j < 450; j++){
           LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);  //Sleep for 450X8 = 3600 seconds.
-        }      
-      break;
-    default: 
-      // if nothing else matches, do the default
-      // default is optional
+        }
   }
 }
 
@@ -91,8 +87,6 @@ void set_readings_per_file(){
     case 4:
       readings_per_file = 24;
       break;
-    default:
-      //nothing matched. you set an invalid sleep_time
   }
 }
 
