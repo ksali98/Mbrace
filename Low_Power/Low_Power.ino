@@ -12,12 +12,12 @@
 int data_block = 0; //10 Second data Blocks
 byte sensors[800];
 File dataFile;
-const String file_prefix = String("AAAAA");
+const String file_prefix = String("AAAAA"); // *** EDIT *** // first part of SD file name
 int file_number = 0;
 int readings_in_file = 0;
-int sleep_time = 1; // Enter reading frequency value here: Only 1, 2, 3 or 4.
+int sleep_time = 1; // *** EDIT *** // Enter reading frequency value here: Only 1, 2, 3 or 4.
 int readings_per_file = 864000;  // 10*60*60*24 = 864000 is the default
-                    // 1 = 10Hz, 2 = 1Hz, 3 =  1min, 4 = 1hr.
+                                 // 1 = 10Hz, 2 = 1Hz, 3 =  1min, 4 = 1hr.
 
 
 void setup() {
