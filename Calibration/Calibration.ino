@@ -1,18 +1,15 @@
-
-
 #include <TimerOne.h>
-
 
 const int array_length = 10;
 char mode = NULL;
 int steps_num = NULL;
-long count = 0;
+volatile long count = 0;
 int sensor_voltage[array_length];
 int sum = 0;
 bool dir;
-int N; //Number of readings
+int n; //Number of readings
 
-void step(int steps_num, bool dir);
+void step(int steps_num, bool dir); // moves the motor
 void welcome_text();
 void handle_input();
 void print_average();
@@ -22,7 +19,7 @@ void ISR_step();
 
 void setup() {
   // put your setup code here, to run once:
-  Timer1.initialize(40);  // 40 us = 25 kHz
+  Timer1.initialize(50);  // 50 us 
   Serial.begin(9600);
   pinMode(13, OUTPUT); //step
   pinMode(9, OUTPUT);  // direction
@@ -56,16 +53,16 @@ void handle_input() {
       }
       break;
     case 's':
-        while(!Serial.available()){
-          // wait for input
-        }
-          steps_num = Serial.parseInt();
-          N = Serial.parseInt();
-          dir = Serial.parseInt();
-          for(int i =0; i < N; i++){
-            step(steps_num, dir);
-            print_average();
-          }
+      while(!Serial.available()){
+        // wait for input
+      }
+      steps_num = Serial.parseInt();  // 1000 steps
+      n = Serial.parseInt(); // 20 sets
+      dir = Serial.parseInt();
+      for(int i =0; i < n; i++){
+        step(steps_num, dir);
+        print_average();
+      }
       break;
     case 'm':
       if(steps_num) {
@@ -101,34 +98,31 @@ void welcome_text(){
 
 void step(int steps_num, bool dir){ //steps the motor 
   digitalWrite(9, dir);   //DIRECTION
-  for(int i = 0; i < steps_num; i++){
-    digitalWrite(13, HIGH); //STEP  
-    delayMicroseconds(50);  // NO LOWER THAN 50 Microseconds FOR IT TO WORK 
-    digitalWrite(13, LOW); //step
-    delayMicroseconds(50);
-    if(dir){
-      count--;
-      }
-      else{
-      count++;
-      }
-
-    sensor_voltage[abs(count) % array_length] = analogRead(A0);
+  interrupts();
+  while (abs(count) < steps_num * 2){
+    if(abs(count) % 2 == 0) {
+      sensor_voltage[abs(count) % array_length] = analogRead(A0);
       sum = 0;
       for(int i=0; i < array_length; i++){
-      sum += sensor_voltage[i];
+        sum += sensor_voltage[i];
+      }
     }
   }
-} 
+  noInterrupts();
+}
 
 void print_average() {
-  Serial.print(count);
+  Serial.print(count/2);
   Serial.print(", ");    
   Serial.println(sum/array_length);
 } 
 
 
 void ISR_step(){
-  digitalWrite(13,!digitalRead(13));
-   
+  digitalWrite(13, !digitalRead(13));
+  if(dir){
+    count--;  
+  }else{
+    count++;
   }
+}
