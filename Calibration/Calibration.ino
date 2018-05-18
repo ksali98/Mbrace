@@ -1,3 +1,8 @@
+
+
+#include <TimerOne.h>
+
+
 const int array_length = 10;
 char mode = NULL;
 int steps_num = NULL;
@@ -12,11 +17,12 @@ void welcome_text();
 void handle_input();
 void print_average();
 void update_count();
+void ISR_step();
 
-//This is a test
 
 void setup() {
   // put your setup code here, to run once:
+  Timer1.initialize(40);  // 40 us = 25 kHz
   Serial.begin(9600);
   pinMode(13, OUTPUT); //step
   pinMode(9, OUTPUT);  // direction
@@ -121,3 +127,8 @@ void print_average() {
   Serial.println(sum/array_length);
 } 
 
+
+void ISR_step(){
+  digitalWrite(13,!digitalRead(13));
+   
+  }
