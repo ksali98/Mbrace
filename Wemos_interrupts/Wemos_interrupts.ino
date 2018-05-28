@@ -17,6 +17,8 @@
 
 //Amin Ali 05/13/2018
 
+//  Prep for GCRL trip. 05/28/2018 - File (Date,G,#)
+
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
 #include <Wire.h>
@@ -28,10 +30,10 @@
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
 const int readings_per_file = 864000;  // 10*60*60*24 = 864000
-const String file_prefix = String("AAAAB");
+const String file_prefix = String("0528G");
 
-const char* ssid     = "Alta Vista";
-const char* password = "alialiali";
+const char* ssid     = "Mbrace_JSU";
+const char* password = "alialiali1";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 
