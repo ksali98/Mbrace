@@ -49,6 +49,8 @@ volatile bool payload_sent = false;
 void ICACHE_RAM_ATTR onTimerISR();
 void send_payload(byte *payload, int payload_size);
 int base64_encode(char *output, char *input, int inputLen);
+int get_time_in_seconds();
+void open_file();
 
 void setup() {
   Serial.begin(9600); // higher speed 
@@ -59,7 +61,7 @@ void setup() {
     delay(100);
   }
   readings_in_file = get_time_in_seconds() * 10;
-  Serial.println("Connected") //Debug string hppens only once 
+  Serial.println("Connected"); //Debug string hppens only once 
   
   // SD Card Setup
   SD.begin();
@@ -120,6 +122,7 @@ void ICACHE_RAM_ATTR onTimerISR(){
       payload_length++;
     }
     readings_in_file++;
+  }
 }
 
 //Sending WiFi data..
