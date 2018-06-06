@@ -1,5 +1,29 @@
+<<<<<<< Updated upstream
 //New code, short iterrupt, fully sequential. SD timestamp.
 //
+=======
+//Wemos_mbrace.xyz_10Hz_SD_working
+
+//This code works. Wemos reads data from 6 sensors @ 10Hz (I2C not tested yet)
+//This data is encoeded base 64, satitized bu remove and replacing '+' and sent to MBRACE.xyz.
+//Data is simultaniously saved to an SD card. 
+
+// Code working, tested 03/18/2018. I2C not tested, and no SD card connected.
+//  Kamal Ali
+
+//Every time this code is used, a section will be added to Setup where experimt specific data
+//will be added. That shuold include experiment date, location and specifics that should be
+//written to the SD card.  Kamal Ali  03/27/2018.....
+
+//As of 05/13/2018. This code is to write a single file a day on SD as well as on MBRACE.xyz 
+//data-collector folder. File name is 5 letters (Index) and a three digit running number.
+//Letters are Site, Device, Experiment code. See Readme for detials.
+
+//Amin Ali 05/13/2018
+
+// Kamal Ali, 06/01/2018. Bad data, should shorten the ISR.
+
+>>>>>>> Stashed changes
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
 #include <Wire.h>
@@ -63,15 +87,27 @@ void setup() {
 }
 
 void loop() {
+<<<<<<< Updated upstream
   if (payload_length == byte_number*sensor_group_readings) {
     millis_value =  millis();
     open_file();
     dataFile.write("!!");
     dataFile.write((byte *) &millis_value, 4);
+=======
+  // If the payload is full, make a base64 encoded copy and send it over WIFI
+  if (payload_length == byte_number*sensor_group_readings and !payload_sent) {
+    // first load data into SD before seding WiFi.
+>>>>>>> Stashed changes
     dataFile.write("$$");
     dataFile.write(sensor_payload, payload_length);
     dataFile.flush();
 
+<<<<<<< Updated upstream
+=======
+    // marking the current full payload as sent so that we don't send it again if
+    //   this loop is called before the next interrupt wipes the payload array
+    payload_sent = true;
+>>>>>>> Stashed changes
     base64_encode((char*)output_payload, (char*)sensor_payload, payload_length);
     send_payload(output_payload, (payload_length)*4/3);
     payload_length = 0;
@@ -94,7 +130,30 @@ void loop() {
 //ISR
 void ICACHE_RAM_ATTR onTimerISR(){
   timer1_write(500000);// We have been interrupted, come back in 100ms time
+<<<<<<< Updated upstream
   interrupted = true;
+=======
+
+  // Writing sensor data to the SD card if the payload array is full.
+  //   Once we are done, we reset the payload_length to 0 so the wifi send code
+  //   needs to run before that happens. (approx 100ms window between the end of the
+  //   interrupt(payload_length++) and the next call to the interrupt)
+  if (payload_length == byte_number*sensor_group_readings) {
+    open_file();
+   
+    payload_length = 0;
+    payload_sent = false;
+  }
+ 
+  // Reading sensors
+  Wire.requestFrom(1, byte_number);
+  while (Wire.available()) {
+    for (int i = 0; i < byte_number; i++) {
+      sensor_payload[payload_length] = Wire.read();
+      payload_length++;
+    }
+    readings_in_file++;
+>>>>>>> Stashed changes
 }
 
 //Sending WiFi data..
@@ -108,7 +167,7 @@ void send_payload(byte *payload, int payload_size) {
   byte request_string[10000];
   String start_string = String("GET /data_collector/?mac="+WiFi.macAddress()+"&data=");  // "POST http(s)://host:port/api/v1/0AaRkVNSDhBSdSC56AnS/telemetry"
   String middle_string = String((char*)payload);
-  middle_string.replace("+", "%2B"); //Php can not send a +, it has to bre replaced by %2B (Major bug)
+  middle_string.replace("+", "%2B"); // Php can not send a +, it has to be replaced by %2B (Major bug)
   String end_string   = String(" HTTP/1.1\r\nHost: ") + host + "\r\n\r\n";
 
 // Serial.println("sending data: " + start_string + middle_string + end_string);  //Debug string
