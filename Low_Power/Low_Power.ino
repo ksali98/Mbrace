@@ -9,8 +9,8 @@
 // MISO pin - 12
 // SCK pin  - 13
  
-int data_block = 0; //10 Second data Blocks
-byte sensors[800];
+int data_block = 0; //  10 Second data Blocks
+byte sensors[800]; // hghghghg
 File dataFile;
 const String file_prefix = String("AAAAA"); // *** EDIT *** // first part of SD file name
 int file_number = 0;
