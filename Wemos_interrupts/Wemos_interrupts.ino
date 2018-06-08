@@ -17,7 +17,7 @@
 
 //Amin Ali 05/13/2018
 
-//  Prep for GCRL trip. 05/28/2018 - File (Date,G,#)
+//  Prep for GCRL trip. 05/28/2018 - File (G,Date,#) alwys start with letter.
 
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
@@ -30,10 +30,10 @@
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
 const int readings_per_file = 864000;  // 10*60*60*24 = 864000
-const String file_prefix = String("0528G");
+const String file_prefix = String("G0528");
 
-const char* ssid     = "Mbrace_JSU";
-const char* password = "alialiali1";
+const char* ssid     = "jsumobilenet";
+const char* password = "";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 
@@ -67,8 +67,8 @@ void setup() {
   SD.begin();
   dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
   dataFile.write("Experiment specific Data: \r\n");
-  dataFile.write("Date: 03/29/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: WiFiA.txt \r\n");
-  dataFile.write("Comments: First WiFi experiemnt sending data to MBRACE.xyz, data_collector, with MAC as filename.\r\n\r\n\r\n");
+  dataFile.write("Date: 05/28/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: WiFiA.txt \r\n");
+  dataFile.write("Comments: WiFi experiemnt sending data to MBRACE.xyz, and on SD card daily filename.\r\n\r\n\r\n");
   dataFile.flush();
 
   // I2C Setup
@@ -115,14 +115,14 @@ void ICACHE_RAM_ATTR onTimerISR(){
   }
  
   // Reading sensors
-  Wire.requestFrom(1, byte_number);
-  while (Wire.available()) {
+ // Wire.requestFrom(1, byte_number);
+//  while (!Wire.available()) {
     for (int i = 0; i < byte_number; i++) {
-      sensor_payload[payload_length] = Wire.read();
+      sensor_payload[payload_length] = i ;//Wire.read();
       payload_length++;
     }
     readings_in_file++;
-  }
+//  }
 }
 
 //Sending WiFi data..
