@@ -1,5 +1,7 @@
 //New code, short iterrupt, fully sequential. SD timestamp.
-//
+// and daily files. both in SD and MBRACE.xyz
+
+
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
 //#include <Wire.h>
