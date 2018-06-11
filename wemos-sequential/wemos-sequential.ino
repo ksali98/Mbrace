@@ -4,10 +4,10 @@
 
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
-//#include <Wire.h>
+#include <Wire.h>
 #include <SD.h>
 #include <SPI.h>
-#include <ArduinoHttpClient.h>  // This is used to help parse the response from time server
+#include <ArduinoHttpClient.h>  // This is used to parse the response from time server
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
@@ -49,46 +49,48 @@ void setup() {
   // SD Card Setup
   SD.begin();
   dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
-  dataFile.write("Experiment specific Data: \r\n");
+  dataFile.write("Experiment specific Data: \r\n");  // Begin Heder Data  ******************************************************
   dataFile.write("Date: yy/xx/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: aaaa.txt \r\n");
-  dataFile.write("Comments: .\r\n\r\n\r\n");
+  dataFile.write("Comments: .\r\n\r\n\r\n");  //  End Header Data  *******************************************************
   dataFile.flush();
   file_start_time = millis() - get_time_in_seconds() * 1000;
 
-//  // I2C Setup
-//  Wire.begin();
-//  Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
-//  delay(100);  // Short delay, wait for the Mate to send back CMD
+  // I2C Setup
+  Wire.begin();
+  Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
+  delay(100);  // Short delay, wait for the Mate to send back CMD
 
   // ISR Setup
   timer1_attachInterrupt(onTimerISR);
   timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
-  timer1_write(1000); // interrupt after 100? to get to ISR
+  timer1_write(100); // interrupt after 100? to get to ISR
 }
 
 void loop() {
   if (payload_length == byte_number*sensor_group_readings) {
-    millis_value =  millis();
+ //   millis_value =  millis();
+    sensor_payload[]= "!!";
+    sensor_payload[] = ((byte *) &millis(), 4);
     open_file();
-    dataFile.write("!!");
-    dataFile.write((byte *) &millis_value, 4);
+  //  dataFile.write("!!");
+  //  dataFile.write((byte *) &millis_value, 4);
     dataFile.write("$$");
-    dataFile.write(sensor_payload, payload_length);
+    dataFile.write(sensor_payload, payload_length+6);
     dataFile.flush();
 
-    base64_encode((char*)output_payload, (char*)sensor_payload, payload_length);
-    send_payload(output_payload, (payload_length)*4/3);
+    base64_encode((char*)output_payload, (char*)sensor_payload, payload_length+6);
+    send_payload(output_payload, (payload_length+6)*4/3);
     payload_length = 0;
   }
   // Reading sensors when interrupted
   if(interrupted){
- //   Serial.println("Interrupted");
-   // Wire.requestFrom(1, byte_number);
-   // while (!Wire.available()) {
+    Serial.println("Interrupted"); // Debug line
+    Wire.requestFrom(1, byte_number);
+    while (!Wire.available()) {
       for (int i = 0; i < byte_number; i++) {
-        sensor_payload[payload_length] = i ;//Wire.read();
+        sensor_payload[payload_length] = Wire.read();
         payload_length++;
-  //    }
+      }
     }
     interrupted = false;
   }
@@ -104,7 +106,6 @@ void ICACHE_RAM_ATTR onTimerISR(){
 
 //Sending WiFi data..
 void send_payload(byte *payload, int payload_size) {
-//  Serial.println("Sending payload"); //  Debug string
   WiFiClient client;
   if (!client.connect(host, port)) {
     Serial.println("connection failed");
@@ -115,12 +116,10 @@ void send_payload(byte *payload, int payload_size) {
   String middle_string = String((char*)payload);
   middle_string.replace("+", "%2B"); // Php can not send a +, it has to be replaced by %2B (Major bug)
   String end_string   = String(" HTTP/1.1\r\nHost: ") + host + "\r\n\r\n";
-
-// Serial.println("sending data: " + start_string + middle_string + end_string);  //Debug string
-
   client.print(start_string + middle_string + end_string);
 }
 
+// Time of day in seconds (used once)
 int get_time_in_seconds(){
   WiFiClient wifi;
   HttpClient client = HttpClient(wifi, host, port);
@@ -128,6 +127,7 @@ int get_time_in_seconds(){
   return client.responseBody().toInt();
 }
 
+// New file name every day at Midnight.
 void open_file(){
   if((millis() - file_start_time) > 86400000){
     file_start_time = millis();
