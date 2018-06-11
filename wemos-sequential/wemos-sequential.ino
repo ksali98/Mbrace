@@ -7,6 +7,7 @@
 #include <Wire.h>
 #include <SD.h>
 #include <SPI.h>
+
 #include <ArduinoHttpClient.h>  // This is used to parse the response from time server
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
@@ -68,23 +69,30 @@ void setup() {
 
 void loop() {
   if (payload_length == byte_number*sensor_group_readings) {
- //   millis_value =  millis();
-    sensor_payload[]= "!!";
-    sensor_payload[] = ((byte *) &millis(), 4);
-    open_file();
-  //  dataFile.write("!!");
-  //  dataFile.write((byte *) &millis_value, 4);
+//    millis_value =  millis();
+//    open_file();
+//    dataFile.write("!!");
+    dataFile.write((byte *) &millis_value, 4);
     dataFile.write("$$");
-    dataFile.write(sensor_payload, payload_length+6);
+    dataFile.write(sensor_payload, payload_length);
     dataFile.flush();
 
-    base64_encode((char*)output_payload, (char*)sensor_payload, payload_length+6);
+    base64_encode((char*)output_payload, (char*)sensor_payload, payload_length);
     send_payload(output_payload, (payload_length+6)*4/3);
     payload_length = 0;
   }
   // Reading sensors when interrupted
   if(interrupted){
-    Serial.println("Interrupted"); // Debug line
+ //   Serial.println("Interrupted"); // Debug line
+
+    if(payload_length == 0){
+      char millis_array[5] = "\0";
+      strcpy((char*)millis_array,(char*)millis());
+      strcpy((char*)sensor_payload,"!!");
+      strcat((char*)sensor_payload,millis_array);
+      strcat((char*)sensor_payload,"$$");
+      payload_length = 8;
+    }
     Wire.requestFrom(1, byte_number);
     while (!Wire.available()) {
       for (int i = 0; i < byte_number; i++) {
