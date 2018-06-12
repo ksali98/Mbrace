@@ -4,21 +4,21 @@
 
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
-//#include <Wire.h>
-#include <SD.h>
+#include <Wire.h>
+//#include <SD.h>
 #include <SPI.h>
 #include <ArduinoHttpClient.h>  // This is used to help parse the response from time server
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
-const String file_prefix = String("AAAA");
+const String file_prefix = String("TTTT");
 
 const char* ssid     = "jsumobilenet";
 const char* password = "";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 
-File dataFile;
+//File dataFile;
 byte sensor_payload[byte_number*sensor_group_readings];
 byte output_payload[byte_number*sensor_group_readings];
 int day_counter = 0;
@@ -47,18 +47,18 @@ void setup() {
   delay(100);
   
   // SD Card Setup
-  SD.begin();
-  dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
-  dataFile.write("Experiment specific Data: \r\n");
-  dataFile.write("Date: yy/xx/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: aaaa.txt \r\n");
-  dataFile.write("Comments: .\r\n\r\n\r\n");
-  dataFile.flush();
-  file_start_time = millis() - get_time_in_seconds() * 1000;
+//  SD.begin();
+//  dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
+//  dataFile.write("Experiment specific Data: \r\n");
+//  dataFile.write("Date: yy/xx/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: aaaa.txt \r\n");
+//  dataFile.write("Comments: .\r\n\r\n\r\n");
+//  dataFile.flush();
+//  file_start_time = millis() - get_time_in_seconds() * 1000;
 
 //  // I2C Setup
-//  Wire.begin();
-//  Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
-//  delay(100);  // Short delay, wait for the Mate to send back CMD
+  Wire.begin();
+  Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
+  delay(100);  // Short delay, wait for the Mate to send back CMD
 
   // ISR Setup
   timer1_attachInterrupt(onTimerISR);
@@ -69,12 +69,12 @@ void setup() {
 void loop() {
   if (payload_length == byte_number*sensor_group_readings) {
     millis_value =  millis();
-    open_file();
-    dataFile.write("!!");
-    dataFile.write((byte *) &millis_value, 4);
-    dataFile.write("$$");
-    dataFile.write(sensor_payload, payload_length);
-    dataFile.flush();
+//    open_file();
+//    dataFile.write("!!");
+//    dataFile.write((byte *) &millis_value, 4);
+//    dataFile.write("$$");
+//    dataFile.write(sensor_payload, payload_length);
+//    dataFile.flush();
 
     base64_encode((char*)output_payload, (char*)sensor_payload, payload_length);
     send_payload(output_payload, (payload_length)*4/3);
@@ -82,13 +82,13 @@ void loop() {
   }
   // Reading sensors when interrupted
   if(interrupted){
- //   Serial.println("Interrupted");
-   // Wire.requestFrom(1, byte_number);
-   // while (!Wire.available()) {
+    Serial.println("Interrupted");
+    Wire.requestFrom(1, byte_number);
+    while (!Wire.available()) {
       for (int i = 0; i < byte_number; i++) {
         sensor_payload[payload_length] = i ;//Wire.read();
         payload_length++;
-  //    }
+      }
     }
     interrupted = false;
   }
@@ -132,7 +132,7 @@ void open_file(){
   if((millis() - file_start_time) > 86400000){
     file_start_time = millis();
     day_counter++;
-    dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
+//    dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
   }
 }
 

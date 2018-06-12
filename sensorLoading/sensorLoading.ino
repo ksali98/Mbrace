@@ -4,7 +4,7 @@
 //display the selected sample data on the screen.
 
 
-#include <ESP8266WiFi.h>
+//#include <ESP8266WiFi.h>
 #include <Wire.h>
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
@@ -14,7 +14,7 @@ void setup() {
   
   // I2C Setup
   Wire.begin();
-  Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
+  //Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
   delay(100);  // Short delay, wait for the Mate to send back CMD
 }
 
@@ -26,9 +26,12 @@ void loop() {
       //Wait for input
     }
     int sensor_number = Serial.parseInt();
+    Serial.println("got the number");
     while(sensor_number != 9){  
+      Serial.println("asking for data from wire");
        Wire.requestFrom(1, byte_number);
         while (Wire.available()) {
+          Serial.println("I have received data");
           for (int i = 0; i < 6; i++) {
             sensor_value[i] = Wire.read();
           }
