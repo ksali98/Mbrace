@@ -1,22 +1,22 @@
 //New code, short iterrupt, fully sequential. SD timestamp.
 // and daily files. both in SD and MBRACE.xyz
-// This is a testing file
+// This is a testing file?????
 
 
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
 #include <Wire.h>
+
 #include <SD.h>
 #include <SPI.h>
-
 #include <ArduinoHttpClient.h>  // This is used to parse the response from time server
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
 const String file_prefix = String("AAAA");
 
-const char* ssid     = "jsumobilenet";
-const char* password = "";
+const char* ssid     = "Alta Vista";
+const char* password = "alialiali";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 
@@ -71,10 +71,10 @@ void setup() {
 void loop() {
   if (payload_length == byte_number*sensor_group_readings) {
 //    millis_value =  millis();
-//    open_file();
+      open_file();
 //    dataFile.write("!!");
-    dataFile.write((byte *) &millis_value, 4);
-    dataFile.write("$$");
+//    dataFile.write((byte *) &millis_value, 4);
+//    dataFile.write("$$");
     dataFile.write(sensor_payload, payload_length);
     dataFile.flush();
 
@@ -85,14 +85,18 @@ void loop() {
   // Reading sensors when interrupted
   if(interrupted){
  //   Serial.println("Interrupted"); // Debug line
+ //   ******** Amin. here is the part I need help with.  *********************************
+ // When interrupted, and if the payload lenth is 0, I want to add !!, millis(), and $$, then start to read sensors.
+ // this way the 60 byte payload is now 68 bytes, we will then have to edit the MBRACE.xyz to not add the $$, etc.
+ //
 
-    if(payload_length == 0){
-      char millis_array[5] = "\0";
-      strcpy((char*)millis_array,(char*)millis());
-      strcpy((char*)sensor_payload,"!!");
-      strcat((char*)sensor_payload,millis_array);
-      strcat((char*)sensor_payload,"$$");
-      payload_length = 8;
+    if(payload_length == 0){  //put "!! + 4 bytes of millis() + $$" at the start of sensor_payload, and increment payload_length by 8.
+//      char millis_array[5] = "\0";
+//      strcpy(millis_array,(char*)millis());
+//      strcpy((char*)sensor_payload,"!!");
+//      strcat((char*)sensor_payload,millis_array);
+//      strcat((char*)sensor_payload,"$$");
+//      payload_length = 8;
     }
     Wire.requestFrom(1, byte_number);
     while (!Wire.available()) {
@@ -136,7 +140,7 @@ int get_time_in_seconds(){
   return client.responseBody().toInt();
 }
 
-// New file name every day at Midnight.
+// New file name every day at Midnight, server time.
 void open_file(){
   if((millis() - file_start_time) > 86400000){
     file_start_time = millis();
