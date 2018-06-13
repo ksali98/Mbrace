@@ -11,7 +11,7 @@
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
-const String file_prefix = String("TTTT");
+const String file_prefix = String("TTTx");
 
 const char* ssid     = "jsumobilenet";
 const char* password = "";
@@ -67,7 +67,7 @@ void setup() {
 }
 
 void loop() {
-  if (payload_length == byte_number*sensor_group_readings) {
+  if (payload_length >= 60 /*byte_number*sensor_group_readings*/) {
     millis_value =  millis();
 //    open_file();
 //    dataFile.write("!!");
@@ -81,13 +81,15 @@ void loop() {
     payload_length = 0;
   }
   // Reading sensors when interrupted
+  int j=0;
   if(interrupted){
     Serial.println("Interrupted");
     Wire.requestFrom(1, byte_number);
-    while (!Wire.available()) {
+    while (Wire.available()) {
       for (int i = 0; i < byte_number; i++) {
-        sensor_payload[payload_length] = i ;//Wire.read();
+        sensor_payload[payload_length] = Wire.read();
         payload_length++;
+        Serial.println(payload_length);
       }
     }
     interrupted = false;

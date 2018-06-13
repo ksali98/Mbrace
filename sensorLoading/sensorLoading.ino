@@ -28,10 +28,10 @@ void loop() {
     int sensor_number = Serial.parseInt();
     Serial.println("got the number");
     while(sensor_number != 9){  
-      Serial.println("asking for data from wire");
+ //     Serial.println("asking for data from wire");
        Wire.requestFrom(1, byte_number);
         while (Wire.available()) {
-          Serial.println("I have received data");
+     //     Serial.println("I have received data");
           for (int i = 0; i < 6; i++) {
             sensor_value[i] = Wire.read();
           }
