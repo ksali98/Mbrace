@@ -11,7 +11,7 @@
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
-const String file_prefix = String("TTTx");
+const String file_prefix = String("TTxx");
 
 const char* ssid     = "jsumobilenet";
 const char* password = "";
@@ -67,10 +67,13 @@ void setup() {
 }
 
 void loop() {
-  if (payload_length >= 60 /*byte_number*sensor_group_readings*/) {
+  if (payload_length >= byte_number*sensor_group_readings) {
+// construct a read_timestamp[6] array that contains !!+millis()
+    
     millis_value =  millis();
 //    open_file();
 //    dataFile.write("!!");
+      dataFile.write(read_timestamp[], 6);
 //    dataFile.write((byte *) &millis_value, 4);
 //    dataFile.write("$$");
 //    dataFile.write(sensor_payload, payload_length);
