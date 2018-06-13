@@ -6,21 +6,20 @@
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
 #include <Wire.h>
-
-#include <SD.h>
+//#include <SD.h>
 #include <SPI.h>
 #include <ArduinoHttpClient.h>  // This is used to parse the response from time server
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
-const String file_prefix = String("AAAA");
+const String file_prefix = String("TTxx");
 
 const char* ssid     = "Alta Vista";
 const char* password = "alialiali";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 
-File dataFile;
+//File dataFile;
 byte sensor_payload[byte_number*sensor_group_readings];
 byte output_payload[byte_number*sensor_group_readings];
 int day_counter = 0;
@@ -49,13 +48,13 @@ void setup() {
   delay(100);
   
   // SD Card Setup
-  SD.begin();
-  dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
-  dataFile.write("Experiment specific Data: \r\n");  // Begin Heder Data  ******************************************************
-  dataFile.write("Date: yy/xx/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: aaaa.txt \r\n");
-  dataFile.write("Comments: .\r\n\r\n\r\n");  //  End Header Data  *******************************************************
-  dataFile.flush();
-  file_start_time = millis() - get_time_in_seconds() * 1000;
+//  SD.begin();
+//  dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
+//  dataFile.write("Experiment specific Data: \r\n");
+//  dataFile.write("Date: yy/xx/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: aaaa.txt \r\n");
+//  dataFile.write("Comments: .\r\n\r\n\r\n");
+//  dataFile.flush();
+//  file_start_time = millis() - get_time_in_seconds() * 1000;
 
   // I2C Setup
   Wire.begin();
@@ -83,26 +82,15 @@ void loop() {
     payload_length = 0;
   }
   // Reading sensors when interrupted
+  int j=0;
   if(interrupted){
- //   Serial.println("Interrupted"); // Debug line
- //   ******** Amin. here is the part I need help with.  *********************************
- // When interrupted, and if the payload lenth is 0, I want to add !!, millis(), and $$, then start to read sensors.
- // this way the 60 byte payload is now 68 bytes, we will then have to edit the MBRACE.xyz to not add the $$, etc.
- //
-
-    if(payload_length == 0){  //put "!! + 4 bytes of millis() + $$" at the start of sensor_payload, and increment payload_length by 8.
-//      char millis_array[5] = "\0";
-//      strcpy(millis_array,(char*)millis());
-//      strcpy((char*)sensor_payload,"!!");
-//      strcat((char*)sensor_payload,millis_array);
-//      strcat((char*)sensor_payload,"$$");
-//      payload_length = 8;
-    }
+    Serial.println("Interrupted");
     Wire.requestFrom(1, byte_number);
-    while (!Wire.available()) {
+    while (Wire.available()) {
       for (int i = 0; i < byte_number; i++) {
         sensor_payload[payload_length] = Wire.read();
         payload_length++;
+        Serial.println(payload_length);
       }
     }
     interrupted = false;
@@ -145,7 +133,7 @@ void open_file(){
   if((millis() - file_start_time) > 86400000){
     file_start_time = millis();
     day_counter++;
-    dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
+//    dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
   }
 }
 

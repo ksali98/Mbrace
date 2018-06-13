@@ -1,3 +1,7 @@
+// Slave Nano with 6 sernsors. Sends 6 bytes with wire requests.
+// uses 5V I2C bus.
+// Kamal S. Ali, 06/08/2018
+
 #include <Wire.h>
 
 #define byte_number 6
@@ -10,7 +14,7 @@ void setup() {
 }
 
 void loop() {
- 
+  // wait for I2C request....
 }
 
 void requestEvent() {
@@ -20,16 +24,12 @@ void requestEvent() {
   sensor[3] = get_mapped_analog(3);
   sensor[4] = get_mapped_analog(6);
   sensor[5] = get_mapped_analog(7);
-  
   Wire.write(sensor, byte_number); //write(array, length(in bytes))
 }
 
 int get_mapped_analog(int analog_pin)
 {
     int sensor_value;
-    sensor_value = analogRead(analog_pin);
-    sensor_value = map(sensor_value, 0, 1023, 0, 255);
+    sensor_value = map(analogRead(analog_pin), 0, 1023, 0, 255);
     return sensor_value;
 }
-
-
