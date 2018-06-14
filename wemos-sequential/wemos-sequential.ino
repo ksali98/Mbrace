@@ -20,11 +20,10 @@ const char* host = "mbrace.xyz";
 const int   port = 80;
 
 //File dataFile;
-byte sensor_payload[byte_number*sensor_group_readings];
-byte output_payload[byte_number*sensor_group_readings];
+byte sensor_payload[byte_number*sensor_group_readings+8];
+byte output_payload[(byte_number*sensor_group_readings+8)*4/3];
 int day_counter = 0;
 long file_start_time = 0;
-long millis_value;
 
 volatile int payload_length = 0;
 volatile bool interrupted = false;
@@ -68,31 +67,38 @@ void setup() {
 }
 
 void loop() {
-  if (payload_length == byte_number*sensor_group_readings) {
-//    millis_value =  millis();
-      open_file();
+  if (payload_length == byte_number*sensor_group_readings+8) {
+//    open_file();
 //    dataFile.write("!!");
-//    dataFile.write((byte *) &millis_value, 4);
+//    dataFile.write((byte *) &read_timestamp, 4);
 //    dataFile.write("$$");
-    dataFile.write(sensor_payload, payload_length);
-    dataFile.flush();
-
+//    dataFile.write(sensor_payload, payload_length);
+//    dataFile.flush();
+ // Serial.println("111");
     base64_encode((char*)output_payload, (char*)sensor_payload, payload_length);
-    send_payload(output_payload, (payload_length+6)*4/3);
+    send_payload(output_payload);
     payload_length = 0;
   }
   // Reading sensors when interrupted
-  int j=0;
   if(interrupted){
-    Serial.println("Interrupted");
-    Wire.requestFrom(1, byte_number);
-    while (Wire.available()) {
-      for (int i = 0; i < byte_number; i++) {
-        sensor_payload[payload_length] = Wire.read();
-        payload_length++;
-        Serial.println(payload_length);
-      }
+  //  Serial.println("Interrupted");
+    if(payload_length == 0){
+      unsigned long read_start_time = millis();
+      memcpy(&(sensor_payload[2]), &read_start_time, 4);
+      sensor_payload[0] = '@';
+      sensor_payload[1] = '@';
+      sensor_payload[6] = '#';
+      sensor_payload[7] = '#';
+      payload_length = 8;
     }
+  //  Wire.requestFrom(1, byte_number);
+  //  while (Wire.available()) {
+      for (int i = 0; i < byte_number; i++) {
+        sensor_payload[payload_length] = i; //Wire.read();
+        payload_length++;
+       // Serial.println(payload_length);
+      }
+//    }
     interrupted = false;
   }
 }
@@ -106,7 +112,7 @@ void ICACHE_RAM_ATTR onTimerISR(){
 }
 
 //Sending WiFi data..
-void send_payload(byte *payload, int payload_size) {
+void send_payload(byte *payload) {
   WiFiClient client;
   if (!client.connect(host, port)) {
     Serial.println("connection failed");
