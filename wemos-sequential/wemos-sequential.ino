@@ -14,14 +14,14 @@ const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
 const String file_prefix = String("TTxx");
 
-const char* ssid     = "Alta Vista";
-const char* password = "alialiali";
+const char* ssid     = "jsumobilenet";
+const char* password = "";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 
 //File dataFile;
-byte sensor_payload[byte_number*sensor_group_readings+8];
-byte output_payload[(byte_number*sensor_group_readings+8)*4/3];
+byte sensor_payload[byte_number*sensor_group_readings+8];  // 8 bytes for !! + millis + $$
+byte output_payload[(byte_number*sensor_group_readings+8)*4/3];  // encoded string with time stamp !!$$
 int day_counter = 0;
 long file_start_time = 0;
 
@@ -68,25 +68,20 @@ void setup() {
 
 void loop() {
   if (payload_length == byte_number*sensor_group_readings+8) {
-//    open_file();
-//    dataFile.write("!!");
-//    dataFile.write((byte *) &read_timestamp, 4);
-//    dataFile.write("$$");
-//    dataFile.write(sensor_payload, payload_length);
-//    dataFile.flush();
- // Serial.println("111");
+    open_file();
+    dataFile.write(sensor_payload, payload_length);
+    dataFile.flush();
     base64_encode((char*)output_payload, (char*)sensor_payload, payload_length);
     send_payload(output_payload);
     payload_length = 0;
   }
-  // Reading sensors when interrupted
+  // Read sensors when interrupted
   if(interrupted){
-  //  Serial.println("Interrupted");
     if(payload_length == 0){
-      unsigned long read_start_time = millis();
-      memcpy(&(sensor_payload[2]), &read_start_time, 4);
+      unsigned long current_time = millis();
       sensor_payload[0] = '@';
       sensor_payload[1] = '@';
+      memcpy(&(sensor_payload[2]), &current_time, 4);
       sensor_payload[6] = '#';
       sensor_payload[7] = '#';
       payload_length = 8;
@@ -96,7 +91,6 @@ void loop() {
       for (int i = 0; i < byte_number; i++) {
         sensor_payload[payload_length] = i; //Wire.read();
         payload_length++;
-       // Serial.println(payload_length);
       }
 //    }
     interrupted = false;
