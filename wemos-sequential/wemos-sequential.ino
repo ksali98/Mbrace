@@ -6,20 +6,22 @@
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
 #include <Wire.h>
-//#include <SD.h>
+#include <SD.h>
 #include <SPI.h>
 #include <ArduinoHttpClient.h>  // This is used to parse the response from time server
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
-const String file_prefix = String("TTxx");
+const String file_prefix = String("Tyxx");
 
-const char* ssid     = "jsumobilenet";
-const char* password = "";
+//const char* ssid     = "jsumobilenet";
+//const char* password = "";
+const char* ssid     = "Alta Vista";
+const char* password = "alialiali";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 
-//File dataFile;
+File dataFile;
 byte sensor_payload[byte_number*sensor_group_readings+8];  // 8 bytes for !! + millis + $$
 byte output_payload[(byte_number*sensor_group_readings+8)*4/3];  // encoded string with time stamp !!$$
 int day_counter = 0;
@@ -47,13 +49,13 @@ void setup() {
   delay(100);
   
   // SD Card Setup
-//  SD.begin();
-//  dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
-//  dataFile.write("Experiment specific Data: \r\n");
-//  dataFile.write("Date: yy/xx/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: aaaa.txt \r\n");
-//  dataFile.write("Comments: .\r\n\r\n\r\n");
-//  dataFile.flush();
-//  file_start_time = millis() - get_time_in_seconds() * 1000;
+  SD.begin();
+  dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
+  dataFile.write("Experiment specific Data: \r\n");
+  dataFile.write("Date: yy/xx/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: aaaa.txt \r\n");
+  dataFile.write("Comments: .\r\n\r\n\r\n");
+  dataFile.flush();
+  file_start_time = millis() - get_time_in_seconds() * 1000;
 
   // I2C Setup
   Wire.begin();
@@ -68,9 +70,9 @@ void setup() {
 
 void loop() {
   if (payload_length == byte_number*sensor_group_readings+8) {
-//    open_file();
-//    dataFile.write(sensor_payload, payload_length);
-//    dataFile.flush();
+    open_file();
+    dataFile.write(sensor_payload, payload_length);
+    dataFile.flush();
     base64_encode((char*)output_payload, (char*)sensor_payload, payload_length);
     send_payload(output_payload);
     payload_length = 0;
@@ -134,10 +136,11 @@ int get_time_in_seconds(){
 
 // New file name every day at Midnight, server time.
 void open_file(){
-  if((millis() - file_start_time) > 86400000){
+  if((millis() - file_start_time) > 150000){
     file_start_time = millis();
     day_counter++;
-//    dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
+    Serial.println(day_counter);
+    dataFile = SD.open(file_prefix + String(day_counter), FILE_WRITE);  // Set file name to be created on SD card
   }
 }
 
