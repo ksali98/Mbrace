@@ -1,9 +1,13 @@
+// Low power system supporting 8 sensors and 4 data collection speeds.
+// Arduino Nano and Hall 2425 system.
+// Kamal Ali, 06/22/2018
+
 #include <SD.h>
 #include <SPI.h>
 #include <LowPower.h>
 #include <avr/io.h>
 
- 
+// Arduino Nano Low power sensor system 
 // CS pin   - 10  
 // MOSI pin - 11
 // MISO pin - 12
@@ -12,7 +16,7 @@
 int data_block = 0; //  10 Second data Blocks
 byte sensors[400]; // 
 File dataFile;
-const String file_prefix = String("zzz"); // *** EDIT *** // first part of SD file name
+const String file_prefix = String("xxx"); // *** EDIT *** // first part of SD file name
 int file_number = 0;
 int readings_in_file = 0;
 int sleep_time = 1; // *** EDIT *** // Enter reading frequency value here: Only 1, 2, 3 or 4.
