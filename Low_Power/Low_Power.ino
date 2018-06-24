@@ -1,6 +1,7 @@
 // Low power system supporting 8 sensors and 4 data collection speeds.
 // Arduino Nano and Hall 2425 system.
 // Kamal Ali, 06/22/2018
+// Fully Functional, as of 06/24/2018... Kamal Ali
 
 #include <SD.h>
 #include <SPI.h>
@@ -16,7 +17,8 @@
 int data_block = 0; //  10 Second data Blocks
 byte sensors[400]; // 
 File dataFile;
-const String file_prefix = String("JJJ"); // *** EDIT *** // first part of SD file name
+const String file_prefix = String("JJJ"); // *** EDIT *** // first part of SD file name, 
+                                          //  Location (JSU, GCRL etc. Frequency selection 1 - 4, "-".
 int file_number = 0;
 long readings_in_file = 0;
 int sleep_time = 1; // *** EDIT *** // Enter reading frequency value here: Only 1, 2, 3 or 4.
@@ -92,7 +94,7 @@ void sleep() {
 void set_readings_per_file(){
   switch (sleep_time) {
     case 1: // 10Hz  write every 400 bytes, 5 seconds
-      readings_per_file = 12000 ;  // bytes per day
+      readings_per_file = 6912000 ;  // bytes per day
       data_block = 400;
       break;
     case 2: // 1Hz writes every 80 bytes, 10 seconds
