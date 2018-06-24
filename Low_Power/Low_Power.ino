@@ -16,7 +16,7 @@
 int data_block = 0; //  10 Second data Blocks
 byte sensors[400]; // 
 File dataFile;
-const String file_prefix = String("yyy"); // *** EDIT *** // first part of SD file name
+const String file_prefix = String("ww4"); // *** EDIT *** // first part of SD file name
 int file_number = 0;
 long readings_in_file = 0;
 int sleep_time = 1; // *** EDIT *** // Enter reading frequency value here: Only 1, 2, 3 or 4.
@@ -25,15 +25,15 @@ long readings_per_file = 0;  // 10*60*60*24 = 864000 is the default
 void open_file();
 
 void setup() {
-  DDRD = DDRD | 0xFC;   //Declare D2 to D7 as OUTPUTS
+  DDRD = DDRD | 0xFC;    //Declare D2 to D7 as OUTPUTS
   DDRB = DDRB | 0x03;    //Declare D8 and D9 as OUTPUTS
-  PORTD = PORTD | 0xFC; //Set D2 to D7 HIGH
+  PORTD = PORTD | 0xFC;  //Set D2 to D7 HIGH
   PORTB = PORTB | 0x03;  //Set D8 and D9 HIGH
   Serial.begin(9600);
   pinMode(10, OUTPUT);
   SD.begin(10);
   dataFile = SD.open(file_prefix + file_number + ".txt", FILE_WRITE);  // Set file name to be created on SD card
-  dataFile.write("Experiment specific Data: \r\n"); //  *** EDIT  ***
+  dataFile.write("Experiment specific Data: date time and location of experiment. \r\n"); //  *** EDIT  ***
   dataFile.flush();
   set_readings_per_file();
 }
@@ -55,10 +55,10 @@ void loop() {
 // Functions start here. *****************************
 
 void open_file() {
-  Serial.print(readings_in_file);
-  Serial.print(" : ");
-  Serial.println(readings_per_file);
-  delay(100);
+//  Serial.print(readings_in_file);
+//  Serial.print(" : ");
+//  Serial.println(readings_per_file);
+//  delay(100);
   if(readings_in_file >= readings_per_file){
     dataFile.close();
     file_number++;
