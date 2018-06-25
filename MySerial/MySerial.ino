@@ -14,7 +14,12 @@ void setup() {
 
   mySerial.println("at"); // Show AT, OK.
   delay(1000);
-
+  
+  digitalWrite(2, HIGH);  // SIM5320A_ON()
+  delay(2000);//                            
+  digitalWrite(2, LOW);
+  delay(2000);
+   
 //  mySerial.println("AT+cmgf=1");
 //  delay(500);
 //  mySerial.println("AT+CMGS=\"+16013293217\"");
