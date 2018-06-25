@@ -3,6 +3,8 @@
 //This code works. Wemos reads data from 6 sensors @ 10Hz and 
 //display the selected sample data on the screen.
 
+//  WEMOS on top .......
+
 
 #include <ESP8266WiFi.h>
 #include <Wire.h>

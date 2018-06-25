@@ -1,7 +1,9 @@
 //Code for sensor and magnet placement checks.
 
-//This code works. Wemos reads data from 6 sensors @ 10Hz and 
+//This code works. Nano reads data from 6 sensors @ 10Hz and 
 //display the selected sample data on the screen.
+
+//  NANO on top......
 
 
 //#include <ESP8266WiFi.h>
