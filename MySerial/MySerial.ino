@@ -20,11 +20,11 @@ void setup() {
   digitalWrite(2, LOW);
   delay(2000);
    
-//  mySerial.println("AT+cmgf=1");
+  mySerial.println("AT+cmgf=1");
+  delay(500);
+//  mySerial.println("AT+CMGS=\"+16015736844\"");
 //  delay(500);
-//  mySerial.println("AT+CMGS=\"+16013293217\"");
-//  delay(500);
-//  mySerial.println("Amin, Do you recognize this number?????"); 
+//  mySerial.println("Do you recognize this number?????"); 
 //  mySerial.write( 0x1a ); // ctrl+Z character
 //  delay(500);
 }

@@ -1,6 +1,9 @@
 //New code, short iterrupt, fully sequential. SD timestamp.
 // and daily files. both in SD and MBRACE.xyz
-// This is a testing file?????
+// This CODE is fully functional. 10Hz data, from 6 sensors on a Nano
+// Data collected by Wemos.
+// Kamal Ali,  06/25/2018
+// Fill in the *****EDIT******
 
 
 #include <ESP8266WiFi.h>
@@ -12,7 +15,7 @@
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
-const String file_prefix = String("TTTX");
+const String file_prefix = String("FNAME-");  // ******EDIT******
 
 //const char* ssid     = "jsumobilenet";
 //const char* password = "";
@@ -37,7 +40,7 @@ int get_time_in_seconds();
 void open_file();
 
 void setup() {
-  Serial.begin(9600); // higher speed 
+  Serial.begin(115200); // higher speed 
   Serial.println("start");
   
   // WIFI Setup
@@ -52,8 +55,8 @@ void setup() {
   SD.begin();
   dataFile = SD.open(file_prefix + String(day_counter) + ".DAT", FILE_WRITE);  // Set file name to be created on SD card
   dataFile.write("Experiment specific Data: \r\n");
-  dataFile.write("Date: yy/xx/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: aaaa.txt \r\n");
-  dataFile.write("Comments: .\r\n\r\n\r\n");
+  dataFile.write("Date: yy/xx/2018 \r\nLocation: GCRL \r\nCodeFile:Wemos_interrupts  \r\nDataFile: aaaa.txt \r\n");  // ******EDIT******
+  dataFile.write("Comments: .\r\n\r\n\r\n");  // ******EDIT******
   dataFile.flush();
   file_start_time = millis() - get_time_in_seconds() * 1000;
 
@@ -136,7 +139,7 @@ int get_time_in_seconds(){
 
 // New file name every day at Midnight, server time.
 void open_file(){
-  if((millis() - file_start_time) > 1500){
+  if((millis() - file_start_time) > 86400000){
     file_start_time = millis();
     day_counter++;
     Serial.println(day_counter);
