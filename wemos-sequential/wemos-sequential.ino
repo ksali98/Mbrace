@@ -40,7 +40,7 @@ int get_time_in_seconds();
 void open_file();
 
 void setup() {
-  Serial.begin(9600); // higher speed 
+  Serial.begin(115200); // higher speed 
   Serial.println("start");
   
   // WIFI Setup
