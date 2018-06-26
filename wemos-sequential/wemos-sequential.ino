@@ -95,13 +95,13 @@ void loop() {
       sensor_payload[7] = '#';
       payload_length = 8;
     }
-  //  Wire.requestFrom(1, byte_number);
-  //  while (Wire.available()) {
+    Wire.requestFrom(1, byte_number);
+    while (Wire.available()) {
       for (int i = 0; i < byte_number; i++) {
-        sensor_payload[payload_length] = i; //Wire.read();
+        sensor_payload[payload_length] = Wire.read();
         payload_length++;
       }
-//    }
+    }
     interrupted = false;
   }
 }
@@ -139,7 +139,8 @@ int get_time_in_seconds(){
 
 // New file name every day at Midnight, server time.
 void open_file(){
-  if((millis() - file_start_time) > 86400000){
+//  if((millis() - file_start_time) > 86400000){ //Full day in ms
+  if((millis() - file_start_time) > 20000){ // work only for 20 seconds before new filename.
     file_start_time = millis();
     day_counter++;
     Serial.println(day_counter);
