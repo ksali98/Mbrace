@@ -36,22 +36,35 @@ void loop() {
   if(Serial.available()){
     sensor_number = Serial.parseInt();
 
-    Serial.println("Hereee");
+    if(sensor_number >= 0 && sensor_number < 8)
+    {
+      Serial.print("Changing to ");
+      Serial.println(sensor_number);
+    } 
+    else
+      Serial.println("Off");
   }
   
- //get_sensor_number();
+  
+   //get_sensor_number();
    for(int i = 0; i<8 ; i++){
      sensor[i] = get_mapped_analog(i);
    }
-      Serial.print("sensor number ");
-      Serial.print(sensor_number);
-      Serial.print(":  ");
-      Serial.println(sensor[sensor_number]);
-      delay(30);
+
+      if(sensor_number >= 0 && sensor_number < 8)
+      {
+          Serial.print("sensor number ");
+          Serial.print(sensor_number);
+          Serial.print(":  ");
+          Serial.println(sensor[sensor_number]);
+          delay(30);
+       }
       
-       LowPower.powerDown(SLEEP_60MS, ADC_OFF, BOD_OFF);
-       LowPower.powerDown(SLEEP_30MS, ADC_OFF, BOD_OFF);
-    }
+      LowPower.idle(SLEEP_60MS, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART0_ON, TWI_OFF);
+      LowPower.idle(SLEEP_30MS, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART0_ON, TWI_OFF);
+       //LowPower.powerDown(SLEEP_60MS, ADC_OFF, BOD_OFF);
+       //LowPower.powerDown(SLEEP_30MS, ADC_OFF, BOD_OFF);      
+ }
 
 
 int get_mapped_analog(int analog_pin){
@@ -59,11 +72,4 @@ int get_mapped_analog(int analog_pin){
       sensor_value = map(analogRead(analog_pin), 0, 1023, 0, 255);
       return sensor_value;
     }
-
-int get_sensor_number(){
-    sensor_number = Serial.parseInt();
-    Serial.println("Here");
-    delay(5);
-    }
-
 

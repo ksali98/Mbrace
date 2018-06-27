@@ -15,7 +15,7 @@
 // SCK pin  - 13
  
 int data_block = 0; //  10 Second data Blocks
-byte sensors[400]; // 
+byte sensors[480]; // 
 File dataFile;
 const String file_prefix = String("JJJ"); // *** EDIT *** // first part of SD file name, 
                                           //  Location (JSU, GCRL etc. Frequency selection 1 - 4, "-".
@@ -93,21 +93,21 @@ void sleep() {
 
 void set_readings_per_file(){
   switch (sleep_time) {
-    case 1: // 10Hz  write every 400 bytes, 5 seconds
+    case 1: // 10Hz  write every 480 bytes, 6 seconds
       readings_per_file = 6912000 ;  // bytes per day
-      data_block = 400;
+      data_block = 480;
       break;
-    case 2: // 1Hz writes every 80 bytes, 10 seconds
+    case 2: // 1Hz writes every 480 bytes, 60 seconds
       readings_per_file = 691200;
-      data_block = 80;
+      data_block = 480;
       break;
-    case 3: // 1 minuet, writes every 80 bytes, 10 minutes
+    case 3: // 1 minuet, writes every 480 bytes, 60 minutes
       readings_per_file = 11520;
-      data_block = 80;
+      data_block = 480;
       break;
-    case 4: // 1 hour, writes every 8 bytes, 1 hour.
+    case 4: // 1 hour, writes every 8 bytes, 3 hour.
       readings_per_file = 192;
-      data_block = 8;
+      data_block = 24;
       break;
   }
 }
