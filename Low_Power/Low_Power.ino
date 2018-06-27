@@ -17,11 +17,11 @@
 int data_block = 0; //  10 Second data Blocks
 byte sensors[480]; // 
 File dataFile;
-const String file_prefix = String("JJJ"); // *** EDIT *** // first part of SD file name, 
+const String file_prefix = String("S1hr-"); // *** EDIT *** // first part of SD file name, 
                                           //  Location (JSU, GCRL etc. Frequency selection 1 - 4, "-".
 int file_number = 0;
 long readings_in_file = 0;
-int sleep_time = 1; // *** EDIT *** // Enter reading frequency value here: Only 1, 2, 3 or 4.
+int sleep_time = 4; // *** EDIT *** // Enter reading frequency value here: Only 1, 2, 3 or 4.
 long readings_per_file = 0;  // 10*60*60*24 = 864000 is the default
                                  // 1 = 10Hz, 2 = 1Hz, 3 =  1min, 4 = 1hr.
 void open_file();
@@ -35,7 +35,7 @@ void setup() {
   pinMode(10, OUTPUT);
   SD.begin(10);
   dataFile = SD.open(file_prefix + file_number + ".txt", FILE_WRITE);  // Set file name to be created on SD card
-  dataFile.write("Experiment specific Data: date time and location of experiment. \r\n"); //  *** EDIT  ***
+  dataFile.write("Experiment specific Data: Sleeping test. 1hr, 06/28/2018. 3pm. \r\n"); //  *** EDIT  ***
   dataFile.flush();
   set_readings_per_file();
 }
@@ -43,9 +43,13 @@ void setup() {
 void loop() {
   for(int i = 0; i < data_block; i++) { 
     if(i % 8 == 0 && i != 0) {
+       PORTD = PORTD & 0x02;  //Set D2 to D7 low
+       PORTB = PORTB & 0xFC;  //Set D8 and D9 low
       sleep();
     }
     readings_in_file++; // number of bytes in file..
+    PORTD = PORTD | 0xFC;  //Set D2 to D7 HIGH
+    PORTB = PORTB | 0x03;  //Set D8 and D9 HIGH
     sensors[i] = map(analogRead(i % 8), 0, 1023, 0, 255);  // Read in A0 to A7 into sensor array as single bytes
   }
   dataFile.write("$$"); // write $$ and data block
@@ -65,7 +69,7 @@ void open_file() {
     dataFile.close();
     file_number++;
     readings_in_file = 0; 
-    dataFile = SD.open(file_prefix + file_number + ".txt", FILE_WRITE);  // Set file name to be created on SD card
+    dataFile = SD.open(file_prefix + file_number + ".dat", FILE_WRITE);  // Set file name to be created on SD card
   } 
 }
 
