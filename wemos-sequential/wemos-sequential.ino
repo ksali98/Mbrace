@@ -15,12 +15,12 @@
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
-const String file_prefix = String("FNAME-");  // ******EDIT******
+const String file_prefix = String("Ff-");  // ******EDIT******
 
-//const char* ssid     = "jsumobilenet";
-//const char* password = "";
-const char* ssid     = "Alta Vista";
-const char* password = "alialiali";
+const char* ssid     = "jsumobilenet";
+const char* password = "";
+//const char* ssid     = "Alta Vista";
+//const char* password = "alialiali";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 
@@ -139,7 +139,8 @@ int get_time_in_seconds(){
 
 // New file name every day at Midnight, server time.
 void open_file(){
-  if((millis() - file_start_time) > 86400000){
+//  if((millis() - file_start_time) > 86400000){
+  if((millis() - file_start_time) > 5000){
     file_start_time = millis();
     day_counter++;
     Serial.println(day_counter);
