@@ -1,36 +1,21 @@
-//New code, short iterrupt, fully sequential. SD timestamp.
-// and daily files. both in SD and MBRACE.xyz
-// This CODE is fully functional. 10Hz data, from 6 sensors on a Nano
-// Data collected by Wemos.
-// Kamal Ali,  06/25/2018
-// Fill in the *****EDIT******
+// Use Wemos as a link to the GSM radio, mySerial.
+// Code uses ~ to send a <CTRL><Z>.
+// Passive code.
 
+#include <SoftwareSerial.h>
 
-#include <ESP8266WiFi.h>
-#include <Ticker.h>
-#include <Wire.h>
-#include <SD.h>
-#include <SPI.h>
-#include <ArduinoHttpClient.h>  // This is used to parse the response from time server
+SoftwareSerial mySerial(2, 0); // RX, TX
 
+const char* host = "mbrace.xyz";
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
-const String file_prefix = String("GCRL-");  // ******EDIT******
 
-//const char* ssid     = "jsumobilenet";
-//const char* password = "";
-const char* ssid     = "Mbrace_JSU";
-const char* password = "alialiali1";
-//const char* ssid     = "Alta Vista";
-//const char* password = "alialiali";
-const char* host = "mbrace.xyz";
-const int   port = 80;
-
-File dataFile;
+byte c;
+int web_call_progress = 0;
 byte sensor_payload[byte_number*sensor_group_readings+8];  // 8 bytes for !! + millis + $$
 byte output_payload[(byte_number*sensor_group_readings+8)*4/3];  // encoded string with time stamp !!$$
-int day_counter = 0;
-long file_start_time = 0;
+unsigned long quiet_start_time;
+unsigned long current_time;
 
 volatile int payload_length = 0;
 volatile bool interrupted = false;
@@ -38,34 +23,18 @@ volatile bool interrupted = false;
 void ICACHE_RAM_ATTR onTimerISR();
 void send_payload(byte *payload, int payload_size);
 int base64_encode(char *output, char *input, int inputLen);
-int get_time_in_seconds();
-void open_file();
 
 void setup() {
-  Serial.begin(115200); // higher speed 
-  Serial.println("start");
-  
-  // WIFI Setup
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(100);
-  }
-  Serial.println("Connected"); // Debug string hppens only once 
-  delay(100);
-  
-  // SD Card Setup
-  SD.begin();
-  dataFile = SD.open(file_prefix + String(day_counter) + ".DAT", FILE_WRITE);  // Set file name to be created on SD card
-  dataFile.write("Experiment specific Data: \r\n");
-  dataFile.write("Date: 07/02/2018 -- 13:35 \r\nLocation: GCRL \r\nCodeFile:wemos_sequential  \r\nDataFile: GCRL-nn \r\n");  // ******EDIT******
-  dataFile.write("Comments: Daily files, @@,millils(),!! followed by 60 bytes per second..\r\n\r\n\r\n");  // ******EDIT******
-  dataFile.flush();
-  file_start_time = millis() - get_time_in_seconds() * 1000;
+  Serial.begin(115200);
+  Serial.println("Goodnight moon!");
+  mySerial.begin(115200);
 
-  // I2C Setup
-  Wire.begin();
-  Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
-  delay(100);  // Short delay, wait for the Mate to send back CMD
+  digitalWrite(2, HIGH);  // mySerialA_ON()
+  delay(2000);//                            
+  digitalWrite(2, LOW);
+  delay(2000);
+
+  gprs_setup();
 
   // ISR Setup
   timer1_attachInterrupt(onTimerISR);
@@ -73,82 +42,115 @@ void setup() {
   timer1_write(100); // interrupt after 100? to get to ISR
 }
 
-void loop() {
+void loop() { // Pass key strokes to mySerialA
+  serial_passthrough();  // Pass serial data between wemos and gprs
+
   if (payload_length == byte_number*sensor_group_readings+8) {
-    open_file();
-    dataFile.write(sensor_payload, payload_length);
-    dataFile.flush();
     base64_encode((char*)output_payload, (char*)sensor_payload, payload_length);
     send_payload(output_payload);
     payload_length = 0;
   }
-  // Read sensors when interrupted
+
   if(interrupted){
     if(payload_length == 0){
       unsigned long current_time = millis();
       sensor_payload[0] = '@';
       sensor_payload[1] = '@';
-//      memcpy(&(sensor_payload[2]), &current_time, 4);
-      sensor_payload[2] = (current_time >> 24) & 0xFF;
-      sensor_payload[3] = (current_time >> 16) & 0xFF;
-      sensor_payload[4] = (current_time >> 8) & 0xFF;
-      sensor_payload[5] = current_time & 0xFF;
+      sensor_payload[2] = 1;
+      sensor_payload[3] = 2;
+      sensor_payload[4] = 3;
+      sensor_payload[5] = 4;
       sensor_payload[6] = '#';
       sensor_payload[7] = '#';
       payload_length = 8;
     }
-    Wire.requestFrom(1, byte_number);
-    while (Wire.available()) {
-      for (int i = 0; i < byte_number; i++) {
-        sensor_payload[payload_length] = Wire.read();
-        payload_length++;
-      }
+    for (int i = 0; i < byte_number; i++) {
+      sensor_payload[payload_length] = i;
+      payload_length++;
     }
     interrupted = false;
   }
 }
 
-// functions start here.
+void serial_passthrough(){
+  if (mySerial.available()){
+    Serial.write(mySerial.read());
+  }
+  if (Serial.available()){
+    c = Serial.read();
+    if(c == 0x7e){
+      mySerial.write(0x1a);
+    } else {
+      mySerial.write(c);
+    }
+  }
+}
 
-//ISR
 void ICACHE_RAM_ATTR onTimerISR(){
   timer1_write(500000);// We have been interrupted, come back in 100ms time<<<<<<< Updated upstream
   interrupted = true;
 }
 
-//Sending WiFi data..
 void send_payload(byte *payload) {
-  WiFiClient client;
-  if (!client.connect(host, port)) {
-    Serial.println("connection failed");
-    return;
-  }
   byte request_string[10000];
-  String start_string = String("GET /data_collector/?mac="+WiFi.macAddress()+"&data=");  // "POST http(s)://host:port/api/v1/0AaRkVNSDhBSdSC56AnS/telemetry"
+  String start_string = String("GET /gprs/?name=gprs_device&data=");  // "POST http(s)://host:port/api/v1/0AaRkVNSDhBSdSC56AnS/telemetry"
   String middle_string = String((char*)payload);
   middle_string.replace("+", "%2B"); // Php can not send a +, it has to be replaced by %2B (Major bug)
   String end_string   = String(" HTTP/1.1\r\nHost: ") + host + "\r\n\r\n";
-  client.print(start_string + middle_string + end_string);
+  gprs_http_send(start_string + middle_string + end_string);
 }
 
-// Time of day in seconds (used once)
-int get_time_in_seconds(){
-  WiFiClient wifi;
-  HttpClient client = HttpClient(wifi, host, port);
-  client.get("/current_time.php");
-  return client.responseBody().toInt();
+void gprs_setup(){
+  mySerial.println("AT+CGSOCKCONT=1,\"IP\",\"wap.cingular\"");
+  wait_for_serial_response();
+
+  mySerial.println("AT+CSOCKSETPN=1");
+  wait_for_serial_response();
+
+  mySerial.println("AT+NETOPEN");
+  wait_for_serial_response();
+  
+  mySerial.println("AT+IPADDR");
+  wait_for_serial_response();
 }
 
-// New file name every day at Midnight, server time.
-void open_file(){
-  if((millis() - file_start_time) > 86400000){ //Full day in ms
-//  if((millis() - file_start_time) > 20000){ // work only for 20 seconds before new filename.
-    file_start_time = millis();
-    day_counter++;
-    Serial.println(day_counter);
-    dataFile = SD.open(file_prefix + String(day_counter) + ".DAT", FILE_WRITE);  // Set file name to be created on SD card
+void gprs_http_send(String http_string){
+  mySerial.println("AT+CIPOPEN=0,\"TCP\",\"mbrace.xyz\",80");
+  wait_for_serial_response();
+
+  mySerial.print("AT+CIPSEND=0,");
+  mySerial.println(http_string.length());
+  wait_for_serial_response();
+ 
+  mySerial.write(http_string.c_str());
+  delay(50);
+  mySerial.write(0x1a);
+  wait_for_serial_response();
+ 
+  mySerial.println("AT+CIPCLOSE=0");
+  wait_for_serial_response();
+}
+
+void wait_for_serial_response(){
+  read_response:
+  while(!mySerial.available()){}
+  while(mySerial.available()){
+    Serial.write(mySerial.read());
   }
+//  delay(1000);
+  quiet_start_time = millis();
+  quiet_time:
+  current_time = millis();
+  if(current_time - quiet_start_time > 1000){
+    goto no_response;
+  }
+  if(mySerial.available()){
+    goto read_response;
+  }
+  no_response:
+  Serial.println("no response");
 }
+
 
 // Base64 Encoding and Decoding.......
 const char b64_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -278,6 +280,5 @@ inline unsigned char b64_lookup(char c) {
       return i;
     }
   }
-
   return -1;
 }
