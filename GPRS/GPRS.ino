@@ -51,15 +51,30 @@ void loop() { // Pass key strokes to mySerialA
     payload_length = 0;
   }
 
-  if(interrupted){
+//  if(interrupted){
+//    if(payload_length == 0){
+//      unsigned long current_time = millis();
+//      sensor_payload[0] = '@';
+//      sensor_payload[1] = '@';
+//      sensor_payload[2] = 1;
+//      sensor_payload[3] = 2;
+//      sensor_payload[4] = 3;
+//      sensor_payload[5] = 4;
+//      sensor_payload[6] = '#';
+//      sensor_payload[7] = '#';
+//      payload_length = 8;
+//    }
+
+    if(interrupted){
     if(payload_length == 0){
       unsigned long current_time = millis();
       sensor_payload[0] = '@';
       sensor_payload[1] = '@';
-      sensor_payload[2] = 1;
-      sensor_payload[3] = 2;
-      sensor_payload[4] = 3;
-      sensor_payload[5] = 4;
+//      memcpy(&(sensor_payload[2]), &current_time, 4);
+      sensor_payload[2] = (current_time >> 24) & 0xFF;
+      sensor_payload[3] = (current_time >> 16) & 0xFF;
+      sensor_payload[4] = (current_time >> 8) & 0xFF;
+      sensor_payload[5] = current_time & 0xFF;
       sensor_payload[6] = '#';
       sensor_payload[7] = '#';
       payload_length = 8;
