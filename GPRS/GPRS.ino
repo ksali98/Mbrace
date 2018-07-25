@@ -34,8 +34,8 @@ void setup() {
   digitalWrite(2, LOW);
   manual_delay(2000);
 
-  ESP.wdtDisable();       // added line
-  ESP.wdtEnable(WDTO_8S); // added line
+//  ESP.wdtDisable();       // added line
+//  ESP.wdtEnable(WDTO_8S); // added line
 //  mySerial.println("AT+IPR=57600");
 //  wait_for_serial_response();
 //  mySerial.begin(57600);
@@ -45,7 +45,7 @@ void setup() {
 
 void loop() { // Pass key strokes to mySerialA
   
-  ESP.wdtFeed();  // added line
+//  ESP.wdtFeed();  // added line
   
   serial_passthrough();  // Pass serial data between wemos and gprs
 
