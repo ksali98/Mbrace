@@ -21,6 +21,7 @@ unsigned long current_time;
 volatile int payload_length = 0;
 volatile bool interrupted = false;
 
+void ICACHE_RAM_ATTR onTimerISR();
 void send_payload(byte *payload, int payload_size);
 int base64_encode(char *output, char *input, int inputLen);
 
@@ -41,6 +42,11 @@ void setup() {
 //  mySerial.begin(57600);
   
   gprs_setup();
+
+  // ISR Setup
+  timer1_attachInterrupt(onTimerISR);
+  timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
+  timer1_write(100); // interrupt after 100? to get to ISR
 }
 
 void loop() { // Pass key strokes to mySerialA
@@ -69,22 +75,25 @@ void loop() { // Pass key strokes to mySerialA
 //      payload_length = 8;
 //    }
 
-  if(payload_length == 0){
-    unsigned long current_time = millis();
-    sensor_payload[0] = '@';
-    sensor_payload[1] = '@';
+    if(interrupted){
+    if(payload_length == 0){
+      unsigned long current_time = millis();
+      sensor_payload[0] = '@';
+      sensor_payload[1] = '@';
 //      memcpy(&(sensor_payload[2]), &current_time, 4);
-    sensor_payload[2] = (current_time >> 24) & 0xFF;
-    sensor_payload[3] = (current_time >> 16) & 0xFF;
-    sensor_payload[4] = (current_time >> 8) & 0xFF;
-    sensor_payload[5] = current_time & 0xFF;
-    sensor_payload[6] = '#';
-    sensor_payload[7] = '#';
-    payload_length = 8;
-  }
-  for (int i = 0; i < byte_number; i++) {
-    sensor_payload[payload_length] = i;
-    payload_length++;
+      sensor_payload[2] = (current_time >> 24) & 0xFF;
+      sensor_payload[3] = (current_time >> 16) & 0xFF;
+      sensor_payload[4] = (current_time >> 8) & 0xFF;
+      sensor_payload[5] = current_time & 0xFF;
+      sensor_payload[6] = '#';
+      sensor_payload[7] = '#';
+      payload_length = 8;
+    }
+    for (int i = 0; i < byte_number; i++) {
+      sensor_payload[payload_length] = i;
+      payload_length++;
+    }
+    interrupted = false;
   }
 }
 
@@ -100,6 +109,11 @@ void serial_passthrough(){
       mySerial.write(c);
     }
   }
+}
+
+void ICACHE_RAM_ATTR onTimerISR(){
+  timer1_write(50000);// We have been interrupted, come back in 100ms time<<<<<<< Updated upstream
+  interrupted = true;
 }
 
 void send_payload(byte *payload) {
