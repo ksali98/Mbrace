@@ -12,6 +12,7 @@ const int sensor_group_readings = 10;  // # of readings we will group together b
 
 byte c;
 int web_call_progress = 0;
+long last_reading_time = 0;
 byte sensor_payload[byte_number*sensor_group_readings+8];  // 8 bytes for !! + millis + $$
 byte output_payload[(byte_number*sensor_group_readings+8)*4/3];  // encoded string with time stamp !!$$
 unsigned long quiet_start_time;
@@ -72,9 +73,12 @@ void loop() { // Pass key strokes to mySerialA
     sensor_payload[7] = '#';
     payload_length = 8;
   }
-  for (int i = 0; i < byte_number; i++) {
-    sensor_payload[payload_length] = i;
-    payload_length++;
+  if (millis() - last_reading_time >100){
+    for (int i = 0; i < byte_number; i++) {
+      sensor_payload[payload_length] = i;
+      payload_length++;
+    }
+    last_reading_time = millis();
   }
 }
 
