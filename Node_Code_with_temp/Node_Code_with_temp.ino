@@ -1,5 +1,5 @@
 // Slave Nano with 6 sernsors. Sends 6 bytes of data plus one byte of temp with wire requests.
-// uses 5V I2C bus.
+// uses 5V I2C bus. Water temp, therefore temp*8
 // Kamal S. Ali, 07/25/2018
 
 #include <Wire.h>
@@ -41,5 +41,5 @@ int get_mapped_analog(int analog_pin) {
 
 int get_mapped_temperature() {
   sensors.requestTemperatures(); // Send the command to get temperatures 
-  return map((int)sensors.getTempCByIndex(0), 0, 100, 0, 100);
+  return map((int)(sensors.getTempCByIndex(0)*8), 0, 255, 0, 255);
 }
