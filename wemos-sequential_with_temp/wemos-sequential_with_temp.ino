@@ -3,6 +3,9 @@
 // This CODE is fully functional. 10Hz data, from 6 sensors on a Nano
 // Data collected by Wemos.
 // Kamal Ali,  06/25/2018
+// 7/29/2018 final update. No SD card. with temperature. Recorded temperature value
+// is X5. 
+
 // Fill in the *****EDIT******
 
 
@@ -15,14 +18,13 @@
 
 const int byte_number = 7;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
-const String file_prefix = String("GCRL-");  // ******EDIT******
 
-const char* ssid     = "jsumobilenet";
-const char* password = "";
+//const char* ssid     = "jsumobilenet";
+//const char* password = "";
 //const char* ssid     = "Mbrace_JSU";
 //const char* password = "alialiali1";
-//const char* ssid     = "Alta Vista";
-//const char* password = "alialiali";
+const char* ssid     = "Alta Vista";
+const char* password = "alialiali";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 
@@ -51,7 +53,7 @@ void setup() {
   
   // I2C Setup
   Wire.begin();
-  Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
+  Wire.setClockStretchLimit(80000);  // In µs for Wemos D1 and Nano
   delay(100);  // Short delay, wait for the Mate to send back CMD
 
   // ISR Setup
@@ -85,6 +87,7 @@ void loop() {
     while (Wire.available()) {
       for (int i = 0; i < byte_number; i++) {
         sensor_payload[payload_length] = Wire.read();
+        Serial.println(sensor_payload[payload_length]);
         payload_length++;
       }
     }
