@@ -21,9 +21,9 @@ byte sensor[byte_number];
 byte temp;
 
 void setup() {
-  DDRD = DDRD | 0xFC;    //Declare D2 to D7 as OUTPUTS
+  DDRD = DDRD | 0xF0;    //Declare D4 to D7 as OUTPUTS
   DDRB = DDRB | 0x03;    //Declare D8 and D9 as OUTPUTS
-  PORTD = PORTD | 0xFC;  //Set D2 to D7 HIGH
+  PORTD = PORTD | 0xF0;  //Set D4 to D7 HIGH
   PORTB = PORTB | 0x03;  //Set D8 and D9 HIGH
   Wire.begin(1);                // join i2c bus with address 1
   Wire.onRequest(requestEvent); 
