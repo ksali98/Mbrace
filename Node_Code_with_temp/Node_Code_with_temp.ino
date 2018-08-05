@@ -5,6 +5,9 @@
 // had to update temperature every 50ms for use in the wire request event.
 // updating in the event does not work. Maybe sensor too slow.
 
+// Sensors powered by D3 to D7 pins. Kamal Ali, 8/5/2018
+
+#include <avr/io.h>
 #include <Wire.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -18,6 +21,10 @@ byte sensor[byte_number];
 byte temp;
 
 void setup() {
+  DDRD = DDRD | 0xFC;    //Declare D2 to D7 as OUTPUTS
+  DDRB = DDRB | 0x03;    //Declare D8 and D9 as OUTPUTS
+  PORTD = PORTD | 0xFC;  //Set D2 to D7 HIGH
+  PORTB = PORTB | 0x03;  //Set D8 and D9 HIGH
   Wire.begin(1);                // join i2c bus with address 1
   Wire.onRequest(requestEvent); 
   Serial.begin(115200);

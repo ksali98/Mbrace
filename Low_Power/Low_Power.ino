@@ -43,7 +43,7 @@ void setup() {
 void loop() {
   for(int i = 0; i < data_block; i++) { 
     if(i % 8 == 0 && i != 0) {
-       PORTD = PORTD & 0x02;  //Set D2 to D7 low
+       PORTD = PORTD & 0x03;  //Set D2 to D7 low
        PORTB = PORTB & 0xFC;  //Set D8 and D9 low
       sleep();
     }
