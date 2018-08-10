@@ -21,10 +21,10 @@ const int sensor_group_readings = 10;  // # of readings we will group together b
 
 //const char* ssid     = "jsumobilenet";
 //const char* password = "";
-//const char* ssid     = "Mbrace_JSU";
-//const char* password = "alialiali1";
-const char* ssid     = "Alta Vista";
-const char* password = "alialiali";
+const char* ssid     = "Mbrace_JSU";
+const char* password = "alialiali1";
+//const char* ssid     = "Alta Vista";
+//const char* password = "alialiali";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 
@@ -87,7 +87,7 @@ void loop() {
     while (Wire.available()) {
       for (int i = 0; i < byte_number; i++) {
         sensor_payload[payload_length] = Wire.read();
-        Serial.println(sensor_payload[payload_length]);
+//        Serial.println(sensor_payload[payload_length]);
         payload_length++;
       }
     }
