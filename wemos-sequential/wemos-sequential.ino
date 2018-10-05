@@ -123,7 +123,7 @@ void send_payload(byte *payload) {
     Serial.println("connection failed");
     return;
   }
-  byte request_string[10000];
+  
   String start_string = String("GET /data_collector/?mac="+WiFi.macAddress()+"&data=");  // "POST http(s)://host:port/api/v1/0AaRkVNSDhBSdSC56AnS/telemetry"
   String middle_string = String((char*)payload);
   middle_string.replace("+", "%2B"); // Php can not send a +, it has to be replaced by %2B (Major bug)
