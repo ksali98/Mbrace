@@ -39,6 +39,9 @@ void ICACHE_RAM_ATTR onTimerISR();
 void send_payload(byte *payload, int payload_size);
 int base64_encode(char *output, char *input, int inputLen);
 
+String start_string;
+String end_string;
+
 void setup() {
   Serial.begin(115200); // higher speed 
   Serial.println("start");
@@ -48,7 +51,7 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(100);
   }
-  Serial.println("Connected"); // Debug string hppens only once 
+  Serial.println("Connected"); // Debug string happens only once 
   delay(100);
   
   // I2C Setup
@@ -60,6 +63,14 @@ void setup() {
   timer1_attachInterrupt(onTimerISR);
   timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
   timer1_write(100); // interrupt after 100? to get to ISR
+
+  sensor_payload[0] = '@';
+  sensor_payload[1] = '@';
+  sensor_payload[6] = '#';
+  sensor_payload[7] = '#';
+
+  start_string = String("GET /data_collector/?mac="+WiFi.macAddress()+"&data=");  // "POST http(s)://host:port/api/v1/0AaRkVNSDhBSdSC56AnS/telemetry"
+  end_string   = String(" HTTP/1.1\r\nHost: ") + host + "\r\n\r\n";
 }
 
 void loop() {
@@ -71,16 +82,12 @@ void loop() {
   // Read sensors when interrupted
   if(interrupted){
     if(payload_length == 0){
-      unsigned long current_time = millis();
-      sensor_payload[0] = '@';
-      sensor_payload[1] = '@';
+      unsigned long current_time = millis();     
 //      memcpy(&(sensor_payload[2]), &current_time, 4);
       sensor_payload[2] = (current_time >> 24) & 0xFF;
       sensor_payload[3] = (current_time >> 16) & 0xFF;
       sensor_payload[4] = (current_time >> 8) & 0xFF;
       sensor_payload[5] = current_time & 0xFF;
-      sensor_payload[6] = '#';
-      sensor_payload[7] = '#';
       payload_length = 8;
     }
     Wire.requestFrom(1, byte_number);
@@ -109,12 +116,9 @@ void send_payload(byte *payload) {
   if (!client.connect(host, port)) {
     Serial.println("connection failed");
     return;
-  }
-  
-  String start_string = String("GET /data_collector/?mac="+WiFi.macAddress()+"&data=");  // "POST http(s)://host:port/api/v1/0AaRkVNSDhBSdSC56AnS/telemetry"
+  }  
   String middle_string = String((char*)payload);
-  middle_string.replace("+", "%2B"); // Php can not send a +, it has to be replaced by %2B (Major bug)
-  String end_string   = String(" HTTP/1.1\r\nHost: ") + host + "\r\n\r\n";
+  middle_string.replace("+", "%2B"); // Php can not send a +, it has to be replaced by %2B (Major bug) 
   client.print(start_string + middle_string + end_string);
 }
 
