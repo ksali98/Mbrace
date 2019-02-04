@@ -17,8 +17,12 @@ const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
 const String file_prefix = String("GCRL-");  // ******EDIT******
 
-const char* ssid     = "jsumobilenet";
-const char* password = "";
+//const char* ssid     = "printers";
+//const char* password = "printers@187704";
+const char* ssid     = "iPhone";
+const char* password = "Okeafa@2015";
+//const char* ssid     = "jsumobilenet";
+//const char* password = "";
 //const char* ssid     = "Mbrace_JSU";
 //const char* password = "alialiali1";
 //const char* ssid     = "Alta Vista";
@@ -105,9 +109,10 @@ void loop() {
       
       payload_length = 8;
     }
-    Wire.requestFrom(1, byte_number);
-    while (Wire.available()) {
-      for (int i = 0; i < byte_number; i++) {
+      Wire.requestFrom(1, byte_number);
+      while (Wire.available()) {
+      for (int i = 0; i < byte_number; i++)
+      {
         sensor_payload[payload_length] = Wire.read();
         payload_length++;
       }

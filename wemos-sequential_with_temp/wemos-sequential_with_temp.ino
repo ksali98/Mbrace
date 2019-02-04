@@ -12,7 +12,6 @@
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
 #include <Wire.h>
-#include <SD.h>
 #include <SPI.h>
 #include <ArduinoHttpClient.h>  // This is used to parse the response from time server
 
@@ -21,14 +20,13 @@ const int sensor_group_readings = 10;  // # of readings we will group together b
 
 //const char* ssid     = "jsumobilenet";
 //const char* password = "";
-const char* ssid     = "Mbrace_JSU";
-const char* password = "alialiali1";
-//const char* ssid     = "Alta Vista";
-//const char* password = "alialiali";
+//const char* ssid     = "Mbrace_JSU";
+//const char* password = "alialiali1";
+const char* ssid     = "Alta Vista";
+const char* password = "alialiali";
 const char* host = "mbrace.xyz";
 const int   port = 80;
 
-File dataFile;
 byte sensor_payload[byte_number*sensor_group_readings+8];  // 8 bytes for !! + millis + $$
 byte output_payload[(byte_number*sensor_group_readings+8)*4/3];  // encoded string with time stamp !!$$
 
@@ -90,13 +88,13 @@ void loop() {
       sensor_payload[5] = current_time & 0xFF;
       payload_length = 8;
     }
-    Wire.requestFrom(1, byte_number);
-    while (Wire.available()) {
+//    Wire.requestFrom(1, byte_number);
+//    while (Wire.available()) {
       for (int i = 0; i < byte_number; i++) {
         sensor_payload[payload_length] = Wire.read();
 //        Serial.println(sensor_payload[payload_length]);
         payload_length++;
-      }
+//      }
     }
     interrupted = false;
   }
