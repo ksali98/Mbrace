@@ -4,6 +4,7 @@
 // linear regualator onboard the SD module removed
 // Testing power consumption.
 // 11/04/2019 Kamal Ali
+// Code to be tested 11/5/2019....
 
 #include <SPI.h>
 #include <LowPower.h>
