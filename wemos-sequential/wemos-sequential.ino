@@ -1,10 +1,11 @@
-//New code, short iterrupt, fully sequential. SD timestamp.
+// New code, short iterrupt, fully sequential. SD and timestamp.
 // and daily files. both in SD and MBRACE.xyz
-// This CODE is fully functional. 10Hz data, from 6 sensors on a Nano
-// Data collected by Wemos.
-// Kamal Ali,  06/25/2018
+// This is the testing phase of the code. This code supports WPA2 Enterprise as well
+// as the regular WiFi Authentication. 
+// Today is 09/26/2019
+// Hardware is Wemos D1, SD Card holder, Nano and !Sensors, Logic Level Converter.
+// Test will last for 3 days.  Kamal Ali
 // Fill in the *****EDIT******
-
 
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
@@ -12,11 +13,26 @@
 #include <SD.h>
 #include <SPI.h>
 #include <ArduinoHttpClient.h>  // This is used to parse the response from time server
+extern "C" {
+#include "user_interface.h"
+#include "wpa2_enterprise.h"
+}
+// [ssid:password]
+// [printers:printers@187704] [iPhone:Okeafa@2015] [jsumobilenet:] [Mbrace_JSU:alialiali] [Alta Vista:alialiali]
 
+// SSID to connect to
+static const char* ssid = "printers"; //*****EDIT******
+// Username for authentification
+static const char* username = "";  //*****EDIT****** if Enterprise only
+// Password for authentication
+static const char* password = "printers@187704";  //*****EDIT******
+
+const int sd_cs_pin = 8;  // CS pin on the WEMOS
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
 const String file_prefix = String("GCRL-");  // ******EDIT******
 
+<<<<<<< Updated upstream
 //const char* ssid     = "printers";
 //const char* password = "printers@187704";
 const char* ssid     = "iPhone";
@@ -27,6 +43,8 @@ const char* password = "Okeafa@2015";
 //const char* password = "alialiali1";
 //const char* ssid     = "Alta Vista";
 //const char* password = "alialiali";
+=======
+>>>>>>> Stashed changes
 const char* host = "mbrace.xyz";
 const int   port = 80;
 
@@ -48,20 +66,34 @@ void open_file();
 String start_string;
 String end_string;
 
+
 void setup() {
-  Serial.begin(115200); // higher speed 
-  Serial.println("start");
-  
-  // WIFI Setup
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(100);
+  // put your setup code here, to run once:
+  Serial.begin(115200);
+  delay(500);
+
+  Serial.println("starting...");
+  if(username != ""){
+    Serial.println("using WPA2 Enterprise...");
+    wpa_enterprise_connect();
+  } else {
+    Serial.println("using WPA2...");
+    WiFi.begin(ssid, password);
   }
-  Serial.println("Connected"); // Debug string happens only once 
-  delay(100);
-  
+  // Wait for connection AND IP address from DHCP
+  Serial.println();
+  Serial.println("Waiting for connection and IP Address from DHCP");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(2000);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
   // SD Card Setup
-  SD.begin();
+  SD.begin(sd_cs_pin);
   dataFile = SD.open(file_prefix + String(day_counter) + ".DAT", FILE_WRITE);  // Set file name to be created on SD card
   dataFile.write("Experiment specific Data: \r\n");
   dataFile.write("Date: 07/02/2018 -- 13:35 \r\nLocation: GCRL \r\nCodeFile:wemos_sequential  \r\nDataFile: GCRL-nn \r\n");  // ******EDIT******
@@ -70,9 +102,9 @@ void setup() {
   file_start_time = millis() - get_time_in_seconds() * 1000;
 
   // I2C Setup
-  Wire.begin();
-  Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
-  delay(100);  // Short delay, wait for the Mate to send back CMD
+//  Wire.begin();
+//  Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
+//  delay(100);  // Short delay, wait for the Mate to send back CMD
 
   // ISR Setup
   timer1_attachInterrupt(onTimerISR);
@@ -88,8 +120,8 @@ void setup() {
   end_string = String(" HTTP/1.1\r\nHost: ") + host + "\r\n\r\n";
 }
 
-void loop() {
-  if (payload_length == byte_number*sensor_group_readings+8) {
+void loop(){
+ if (payload_length == byte_number*sensor_group_readings+8) {
     open_file();
     dataFile.write(sensor_payload, payload_length);
     dataFile.flush();
@@ -106,22 +138,28 @@ void loop() {
       sensor_payload[3] = (current_time >> 16) & 0xFF;
       sensor_payload[4] = (current_time >> 8) & 0xFF;
       sensor_payload[5] = current_time & 0xFF;
-      
+     
       payload_length = 8;
     }
+<<<<<<< Updated upstream
       Wire.requestFrom(1, byte_number);
       while (Wire.available()) {
       for (int i = 0; i < byte_number; i++)
       {
         sensor_payload[payload_length] = Wire.read();
+=======
+//      Wire.requestFrom(1, byte_number);
+//      while (Wire.available()) {
+      for (int i = 0; i < byte_number; i++)
+      {
+        sensor_payload[payload_length] = i //Wire.read();
+>>>>>>> Stashed changes
         payload_length++;
       }
     }
     interrupted = false;
   }
 }
-
-// functions start here.
 
 //ISR
 void ICACHE_RAM_ATTR onTimerISR(){
@@ -135,7 +173,7 @@ void send_payload(byte *payload) {
   if (!client.connect(host, port)) {
     Serial.println("connection failed");
     return;
-  } 
+  }
   String middle_string = String((char*)payload);
   middle_string.replace("+", "%2B"); // Php can not send a +, it has to be replaced by %2B (Major bug)
   client.print(start_string + middle_string + end_string);
@@ -158,6 +196,28 @@ void open_file(){
     Serial.println(day_counter);
     dataFile = SD.open(file_prefix + String(day_counter) + ".DAT", FILE_WRITE);  // Set file name to be created on SD card
   }
+}
+
+void wpa_enterprise_connect(){
+  // WPA2 Connection starts here
+  // Setting ESP into STATION mode only (no AP mode or dual mode)
+
+  wifi_set_opmode(STATION_MODE);
+
+  struct station_config wifi_config;
+  memset(&wifi_config, 0, sizeof(wifi_config));
+  strcpy((char*)wifi_config.ssid, ssid);
+ 
+  wifi_station_set_config(&wifi_config);
+ 
+  wifi_station_clear_cert_key();
+  wifi_station_clear_enterprise_ca_cert();
+  wifi_station_set_wpa2_enterprise_auth(1);
+  wifi_station_set_enterprise_identity((uint8*)username, strlen(username));
+  wifi_station_set_enterprise_username((uint8*)username, strlen(username));
+  wifi_station_set_enterprise_password((uint8*)password, strlen(password));
+  wifi_station_connect();
+  // WPA2 Connection ends here
 }
 
 // Base64 Encoding and Decoding.......
@@ -291,3 +351,4 @@ inline unsigned char b64_lookup(char c) {
 
   return -1;
 }
+

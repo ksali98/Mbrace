@@ -1,21 +1,15 @@
 
-// Low power with Low power SD...  Kamal
-// Low power system supporting 8 sensors and 4 data collection speeds.
-// Arduino Nano and Hall 2425 system.
-// Testinf
+// Low power with Low power SD...
+// Hardware: SD module powered via a switching regulator and 
+// linear regualator onboard the SD module removed
+// Testing power consumption.
+// 11/04/2019 Kamal Ali
 
-//#include <SD.h>
 #include <SPI.h>
 #include <LowPower.h>
 #include <avr/io.h>
 #include "SdFat.h"
 
-// Arduino Nano Low power sensor system 
-// CS pin   - 10  
-// MOSI pin - 11
-// MISO pin - 12
-// SCK pin  - 13
- 
 int data_block = 0; //  10 Second data Blocks
 byte sensors[480]; // 
 //File dataFile;
@@ -26,8 +20,9 @@ SdFat sd;
 SdFile file;
 String file_name;
 
-const String file_prefix = String("10hz-"); // *** EDIT *** // first part of SD file name, 
-                                          //  Location (JSU, GCRL etc. Frequency selection 1 - 4, "-".
+const String file_prefix = String("TJSU1-"); // *** EDIT *** // first part of SD file name, 
+                                          //  Location (JSU, GCRL etc.)(Frequency selection 1 - 4) "-" (Number)
+                                          // T prefix for testing.
 int file_number = 0;
 long readings_in_file = 0;
 int sleep_time = 1; // *** EDIT *** // Enter reading frequency value here: Only 1, 2, 3 or 4.
@@ -42,22 +37,11 @@ void setup() {
   PORTB = PORTB | 0x03;  //Set D8 and D9 HIGH
   Serial.begin(9600);
   pinMode(10, OUTPUT);
-  
-  //SD.begin(10);
   sd.begin(10);
-  
-  //dataFile = SD.open(file_prefix + file_number + ".txt", FILE_WRITE);  // Set file name to be created on SD card
   file_name = file_prefix + file_number + ".txt";
-  
-  //Open file to be created if doesn't exist, appended if already exists, and written to 
   file.open(file_name.c_str(), O_CREAT  | O_APPEND | O_WRITE);
-   
- 
-  //dataFile.write("Experiment specific Data: Sleeping test. 1hr, 06/28/2018. 3pm. \r\n"); //  *** EDIT  ***
-  //dataFile.flush();
   file.write("Experiment specific Data: Sleeping test. 1hr, 06/28/2018. 3pm. \r\n"); //  *** EDIT  ***
   file.sync();
-  //file.open(file_name.c_str(), O_APPEND | O_WRITE);
   set_readings_per_file();
 }
     
@@ -73,30 +57,19 @@ void loop() {
     PORTB = PORTB | 0x03;  //Set D8 and D9 HIGH
     sensors[i] = map(analogRead(i % 8), 0, 1023, 0, 255);  // Read in A0 to A7 into sensor array as single bytes
   }
-  //dataFile.write("$$"); // write $$ and data block
-  //dataFile.write(sensors, data_block);
-  //dataFile.flush();
   file.write("$$"); // write $$ and data block
   file.write(sensors, data_block);
   file.sync();
-  //file.open(file_name.c_str(), O_APPEND | O_WRITE);
   open_file();
 }
 
 // Functions start here. *****************************
 
 void open_file() {
-//  Serial.print(readings_in_file);
-//  Serial.print(" : ");
-//  Serial.println(readings_per_file);
-//  delay(100);
   if(readings_in_file >= readings_per_file){
-    //dataFile.close();
     file.close();
-    
     file_number++;
     readings_in_file = 0;     
-    //dataFile = SD.open(file_prefix + file_number + ".dat", FILE_WRITE);  // Set file name to be created on SD card
     file_name = file_prefix + file_number + ".dat";
     file.open(file_name.c_str(), O_CREAT | O_WRITE);
   } 
