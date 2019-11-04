@@ -11,24 +11,17 @@
 #include <avr/io.h>
 #include "SdFat.h"
 
-int data_block = 0; //  10 Second data Blocks
-byte sensors[480]; // 
-//File dataFile;
-
-// File system object.
+int data_block = 0;
+byte sensors[480];
 SdFat sd;
-// Log file.
 SdFile file;
 String file_name;
 
-const String file_prefix = String("TJSU1-"); // *** EDIT *** // first part of SD file name, 
-                                          //  Location (JSU, GCRL etc.)(Frequency selection 1 - 4) "-" (Number)
-                                          // T prefix for testing.
+const String file_prefix = String("TJSU1-");  // *** EDIT *** // T=Test, Location (JSU, GCRL etc.)(Frequency selection 1 - 4) "-" (Number)
 int file_number = 0;
 long readings_in_file = 0;
-int sleep_time = 1; // *** EDIT *** // Enter reading frequency value here: Only 1, 2, 3 or 4.
-long readings_per_file = 0;  // 10*60*60*24 = 864000 is the default
-                                 // 1 = 10Hz, 2 = 1Hz, 3 =  1min, 4 = 1hr.
+int sleep_time = 1;               // 1 = 10Hz, 2 = 1Hz, 3 =  1min, 4 = 1hr.
+long readings_per_file = 0;       // 10*60*60*24 = 864000 is the default
 void open_file();
 
 void setup() {
@@ -41,7 +34,7 @@ void setup() {
   sd.begin(10);
   file_name = file_prefix + file_number + ".txt";
   file.open(file_name.c_str(), O_CREAT  | O_APPEND | O_WRITE);
-  file.write("Experiment specific Data: Sleeping test. 1hr, 06/28/2018. 3pm. \r\n"); //  *** EDIT  ***
+  file.write("Experiment specific Data. \r\n"); //  *** EDIT  *** //
   file.sync();
   set_readings_per_file();
 }
@@ -52,10 +45,10 @@ void loop() {
        PORTD = PORTD & 0x03;  //Set D2 to D7 low
        PORTB = PORTB & 0xFC;  //Set D8 and D9 low
       sleep();
+       PORTD = PORTD | 0xFC;  //Set D2 to D7 HIGH
+       PORTB = PORTB | 0x03;  //Set D8 and D9 HIGH
     }
     readings_in_file++; // number of bytes in file..
-    PORTD = PORTD | 0xFC;  //Set D2 to D7 HIGH
-    PORTB = PORTB | 0x03;  //Set D8 and D9 HIGH
     sensors[i] = map(analogRead(i % 8), 0, 1023, 0, 255);  // Read in A0 to A7 into sensor array as single bytes
   }
   file.write("$$"); // write $$ and data block
