@@ -2,7 +2,7 @@
 // Low power with Low power SD...
 // Hardware: SD module powered via a switching regulator and 
 // linear regualator onboard the SD module removed
-// Testing power consumption.
+// Testing power consumption. NO SD card module regulator
 // 11/04/2019 Kamal Ali
 // Code to be tested 11/5/2019....
 
