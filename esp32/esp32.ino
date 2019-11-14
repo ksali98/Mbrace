@@ -1,8 +1,8 @@
 //New code, short iterrupt, fully sequential. SD timestamp.
 // and daily files. both in SD and MBRACE.xyz
 // This CODE is fully functional. 10Hz data, from 6 sensors on a Nano
-// Data collected by Wemos.
-// Kamal Ali,  06/25/2018
+// Data collected by ESP32
+// Amin Ali,  11/14/2019
 // Fill in the *****EDIT******
 
 
