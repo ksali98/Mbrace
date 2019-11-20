@@ -20,8 +20,8 @@
 #include <WiFi.h> //Wifi library
 #include <HTTPClient.h>
 
-const char *  ssid = "";
-const char * wifi_username = "j00896818";
+const char *  ssid = "jsumobilenet";
+const char * wifi_username = "";
 const char * wifi_password =  "";
 bool isConnectedToTargetNetwork = false;
 bool istargetNetworkFound = false;
@@ -58,28 +58,23 @@ void setup() {
   Serial.println("start");
 
 //  WIFI Setup
-   WiFi.begin(ssid, wifi_password);
-   while (WiFi.status() != WL_CONNECTED) {
-     delay(100);
-   }
-   Serial.println("Connected"); // Debug string happens only once
-   Serial.println(WiFi.macAddress());
+   WIFI_Connect_Normal();
   // WIFI_Connect_Enterprise(wifi_username, wifi_password);
   delay(100);
 
-//  // SD Card Setup
-//  SD.begin();
-//  dataFile = SD.open(file_prefix + String(day_counter) + ".DAT", FILE_WRITE);  // Set file name to be created on SD card
-//  dataFile.write("Experiment specific Data: \r\n");
-//  dataFile.write("Date: 07/02/2018 -- 13:35 \r\nLocation: GCRL \r\nCodeFile:wemos_sequential  \r\nDataFile: GCRL-nn \r\n");  // ******EDIT******
-//  dataFile.write("Comments: Daily files, @@,millils(),!! followed by 60 bytes per second..\r\n\r\n\r\n");  // ******EDIT******
-//  dataFile.flush();
-//  file_start_time = millis() - get_time_in_seconds() * 1000;
-//
-//  // I2C Setup
-//  Wire.begin();
-//  Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
-//  delay(100);  // Short delay, wait for the Mate to send back CMD
+  // SD Card Setup
+  SD.begin();
+  dataFile = SD.open(file_prefix + String(day_counter) + ".DAT", FILE_WRITE);  // Set file name to be created on SD card
+  //dataFile.write("Experiment specific Data: \r\n");
+  //dataFile.write("Date: 07/02/2018 -- 13:35 \r\nLocation: GCRL \r\nCodeFile:wemos_sequential  \r\nDataFile: GCRL-nn \r\n");  // ******EDIT******
+  //dataFile.write("Comments: Daily files, @@,millils(),!! followed by 60 bytes per second..\r\n\r\n\r\n");  // ******EDIT******
+  dataFile.flush();
+  file_start_time = millis() - get_time_in_seconds() * 1000;
+
+  // I2C Setup
+  Wire.begin();
+  //Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
+  delay(100);  // Short delay, wait for the Mate to send back CMD
 
   // ISR Setup
   timer = timerBegin(0, 80, true);
@@ -114,15 +109,15 @@ void loop() {
 
       payload_length = 8;
     }
-//    Wire.requestFrom(1, byte_number);
-//    while (Wire.available()) {
+    Wire.requestFrom(1, byte_number);
+    while (Wire.available()) {
       for (int i = 0; i < byte_number; i++)
       {
-        // sensor_payload[payload_length] = Wire.read();
-        sensor_payload[payload_length] = i;
+        sensor_payload[payload_length] = Wire.read();
+        //sensor_payload[payload_length] = i;
         payload_length++;
       }
-//    }
+    }
     interrupted = false;
   }
 }
@@ -295,6 +290,17 @@ inline unsigned char b64_lookup(char c) {
   return -1;
 }
 
+void WIFI_Connect_Normal()
+{
+  WiFi.begin(ssid, wifi_password);
+   while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+   }
+   Serial.println("Connected"); 
+   Serial.println(WiFi.macAddress());
+}
+
 void WIFI_Connect_Enterprise(const char * username, const char * password) {
   Serial.print("Connecting to network: ");
   Serial.println(ssid);
@@ -314,7 +320,7 @@ void WIFI_Connect_Enterprise(const char * username, const char * password) {
 
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("connected to " + String(ssid));
-    Serial.println("");
+    Serial.println();
     Serial.println("WiFi connected");
     Serial.println("IP address set: ");
     Serial.println(WiFi.localIP()); //print LAN
