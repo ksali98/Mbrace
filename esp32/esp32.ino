@@ -5,14 +5,13 @@
 // Kamal Ali,  06/25/2018
 // Fill in the *****EDIT******
 
-
 //#include <ESP8266WiFi.h>
 #include <Ticker.h>
 #include <Wire.h>
 #include <SD.h>
 #include <SPI.h>
+#include <string.h>
 //#include <ArduinoHttpClient.h>  // This is used to parse the response from time server
-
 
 ///////////Wi-Fi////////////////////////
 
@@ -27,8 +26,6 @@ bool isConnectedToTargetNetwork = false;
 bool istargetNetworkFound = false;
 
 ////////////end of Wi-Fi////////////////
-
-
 
 const int byte_number = 6;  // # of bytes per sesnor array reading
 const int sensor_group_readings = 10;  // # of readings we will group together before writing to sd card'
@@ -57,11 +54,19 @@ void setup() {
   Serial.begin(115200); // higher speed
   Serial.println("start");
 
-//  WIFI Setup
-   WIFI_Connect_Normal();
-  // WIFI_Connect_Enterprise(wifi_username, wifi_password);
+  //WIFI Setup
+  while (WiFi.status() != WL_CONNECTED) {
+    if(wifi_username == "")
+    {
+       WIFI_Connect_Normal();
+    }
+    else
+    {
+       WIFI_Connect_Enterprise(wifi_username, wifi_password); 
+    }           
+  }
   delay(100);
-
+  
   // SD Card Setup
   SD.begin();
   dataFile = SD.open(file_prefix + String(day_counter) + ".DAT", FILE_WRITE);  // Set file name to be created on SD card
@@ -81,33 +86,42 @@ void setup() {
   timerAttachInterrupt(timer, &onTimerISR, true);
   timerAlarmWrite(timer, 100000, true);
   timerAlarmEnable(timer);
-
-  sensor_payload[0] = '@';
-  sensor_payload[1] = '@';
-  sensor_payload[6] = '#';
-  sensor_payload[7] = '#';
 }
 
 void loop() {
+  while (WiFi.status() != WL_CONNECTED) {
+    if(wifi_username == "")
+    {
+       WIFI_Connect_Normal();
+    }
+    else
+    {
+       WIFI_Connect_Enterprise(wifi_username, wifi_password); 
+    }           
+  }
+  
   if (payload_length == byte_number * sensor_group_readings + 8) {
     open_file();
     dataFile.write(sensor_payload, payload_length);
-    dataFile.flush();
+    dataFile.flush();   
     base64_encode((char*)output_payload, (char*)sensor_payload, payload_length);
     send_payload(output_payload);
     payload_length = 0;
   }
+  
   // Read sensors when interrupted
   if (interrupted) {
     if (payload_length == 0) {
-      unsigned long current_time = millis();
-      //      memcpy(&(sensor_payload[2]), &current_time, 4);
-      sensor_payload[2] = (current_time >> 24) & 0xFF;
-      sensor_payload[3] = (current_time >> 16) & 0xFF;
-      sensor_payload[4] = (current_time >> 8) & 0xFF;
-      sensor_payload[5] = current_time & 0xFF;
-
-      payload_length = 8;
+        unsigned long current_time = millis();
+        sensor_payload[0] = '@';
+        sensor_payload[1] = '@';
+        sensor_payload[2] = (current_time >> 24) & 0xFF;
+        sensor_payload[3] = (current_time >> 16) & 0xFF;
+        sensor_payload[4] = (current_time >> 8) & 0xFF;
+        sensor_payload[5] = current_time & 0xFF;       
+        sensor_payload[6] = '#';
+        sensor_payload[7] = '#';
+        payload_length = 8;
     }
     Wire.requestFrom(1, byte_number);
     while (Wire.available()) {
@@ -136,7 +150,7 @@ void send_payload(byte *payload) {
   data_string.replace("+", "%2B");
   http.begin("http://mbrace.xyz/data_collector/?mac=" + WiFi.macAddress() + "&data=" + data_string);
   http.GET();
-  Serial.println("sending payload to mbrace.xyz");
+  Serial.println("payload sent");
 }
 
 // Time of day in seconds (used once)
@@ -293,12 +307,25 @@ inline unsigned char b64_lookup(char c) {
 void WIFI_Connect_Normal()
 {
   WiFi.begin(ssid, wifi_password);
+   int counter = 0;
    while (WiFi.status() != WL_CONNECTED) {
+      if(counter >= 20)
+      {
+        Serial.println("No connection in 10 seconds. Retrying connection");
+        WiFi.begin(ssid, wifi_password);
+        counter = 0;
+      }
       delay(500);
       Serial.print(".");
+      counter += 1;
    }
-   Serial.println("Connected"); 
-   Serial.println(WiFi.macAddress());
+   if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("connected to " + String(ssid));
+      Serial.println();
+      Serial.println("WiFi connected");
+      Serial.println("IP address set: ");
+      Serial.println(WiFi.localIP()); //print LAN
+  }
 }
 
 void WIFI_Connect_Enterprise(const char * username, const char * password) {
@@ -312,12 +339,19 @@ void WIFI_Connect_Enterprise(const char * username, const char * password) {
   esp_wpa2_config_t config = WPA2_CONFIG_INIT_DEFAULT(); //set config settings to default
   esp_wifi_sta_wpa2_ent_enable(&config); //set config settings to enable function
   WiFi.begin(ssid); //connect to wifi
+  int counter = 0;
   while (WiFi.status() != WL_CONNECTED) {
+    if(counter >= 20)
+    {
+        Serial.println("No connection in 10 seconds. Retrying connection");
+        WiFi.begin(ssid);
+        counter = 0;
+    }
     delay(500);
     Serial.print(".");
-
+    counter += 1;
   }
-
+  
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("connected to " + String(ssid));
     Serial.println();
