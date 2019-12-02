@@ -1,29 +1,28 @@
-//New code, short iterrupt, fully sequential. SD timestamp.
+//New code, short interrupt, fully sequential. SD timestamp.
 // and daily files. both in SD and MBRACE.xyz
 // This CODE is fully functional. 10Hz data, from 6 sensors on a Nano
-// Data collected by Wemos.
-// Kamal Ali,  06/25/2018
+// Data collected by Esp32.
+// Kamal Ali,  12/1/2019
 // Fill in the *****EDIT******
 
-//#include <ESP8266WiFi.h>
 #include <Ticker.h>
 #include <Wire.h>
 #include <SD.h>
 #include <SPI.h>
 #include <string.h>
-//#include <ArduinoHttpClient.h>  // This is used to parse the response from time server
-
 ///////////Wi-Fi////////////////////////
-
 #include "esp_wpa2.h" //wpa2 library for connections to Enterprise networks
 #include <WiFi.h> //Wifi library
 #include <HTTPClient.h>
+#include <WiFiUdp.h>
+#include <NTPClient.h>
 
 const char *  ssid = "jsumobilenet";
 const char * wifi_username = "";
 const char * wifi_password =  "";
-bool isConnectedToTargetNetwork = false;
-bool istargetNetworkFound = false;
+
+WiFiUDP ntp_udp;
+NTPClient timeClient(ntp_udp);
 
 ////////////end of Wi-Fi////////////////
 
@@ -35,8 +34,8 @@ const char* host = "mbrace.xyz";
 const int   port = 80;
 
 File dataFile;
-byte sensor_payload[byte_number * sensor_group_readings + 8]; // 8 bytes for !! + millis + $$
-byte output_payload[(byte_number * sensor_group_readings + 8) * 4 / 3]; // encoded string with time stamp !!$$
+byte sensor_payload[byte_number * sensor_group_readings + 8]; // 8 bytes for @@ + millis + ##
+byte output_payload[(byte_number * sensor_group_readings + 8) * 4 / 3]; // encoded string with time stamp @@##
 int day_counter = 0;
 long file_start_time = 0;
 
@@ -70,15 +69,14 @@ void setup() {
   // SD Card Setup
   SD.begin();
   dataFile = SD.open(file_prefix + String(day_counter) + ".DAT", FILE_WRITE);  // Set file name to be created on SD card
-  //dataFile.write("Experiment specific Data: \r\n");
-  //dataFile.write("Date: 07/02/2018 -- 13:35 \r\nLocation: GCRL \r\nCodeFile:wemos_sequential  \r\nDataFile: GCRL-nn \r\n");  // ******EDIT******
-  //dataFile.write("Comments: Daily files, @@,millils(),!! followed by 60 bytes per second..\r\n\r\n\r\n");  // ******EDIT******
+  //dataFile.write("Experiment Data: \r\n");
+  //dataFile.write("Date: MM/dd/YYYY -- HH:mm \r\nLocation: GCRL \r\nCodeFile:esp32  \r\nDataFile: GCRL-nn \r\n");  // ******EDIT******
+  //dataFile.write("Comments: Daily files, @@,millils(),## followed by 60 bytes per second..\r\n\r\n\r\n");  // ******EDIT******
   dataFile.flush();
   file_start_time = millis() - get_time_in_seconds() * 1000;
 
   // I2C Setup
   Wire.begin();
-  //Wire.setClockStretchLimit(40000);  // In µs for Wemos D1 and Nano
   delay(100);  // Short delay, wait for the Mate to send back CMD
 
   // ISR Setup
@@ -136,14 +134,12 @@ void loop() {
   }
 }
 
-// functions start here.
-
 //ISR
 void IRAM_ATTR onTimerISR(){
   interrupted = true;
 }
 
-//Sending WiFi data..
+//Send WiFi data
 void send_payload(byte *payload) {
   HTTPClient http;
   String data_string = String((char*)payload);
@@ -307,25 +303,7 @@ inline unsigned char b64_lookup(char c) {
 void WIFI_Connect_Normal()
 {
   WiFi.begin(ssid, wifi_password);
-   int counter = 0;
-   while (WiFi.status() != WL_CONNECTED) {
-      if(counter >= 20)
-      {
-        Serial.println("No connection in 10 seconds. Retrying connection");
-        WiFi.begin(ssid, wifi_password);
-        counter = 0;
-      }
-      delay(500);
-      Serial.print(".");
-      counter += 1;
-   }
-   if (WiFi.status() == WL_CONNECTED) {
-      Serial.println("connected to " + String(ssid));
-      Serial.println();
-      Serial.println("WiFi connected");
-      Serial.println("IP address set: ");
-      Serial.println(WiFi.localIP()); //print LAN
-  }
+  Wait_For_Connection()
 }
 
 void WIFI_Connect_Enterprise(const char * username, const char * password) {
@@ -339,24 +317,27 @@ void WIFI_Connect_Enterprise(const char * username, const char * password) {
   esp_wpa2_config_t config = WPA2_CONFIG_INIT_DEFAULT(); //set config settings to default
   esp_wifi_sta_wpa2_ent_enable(&config); //set config settings to enable function
   WiFi.begin(ssid); //connect to wifi
-  int counter = 0;
-  while (WiFi.status() != WL_CONNECTED) {
-    if(counter >= 20)
-    {
+  Wait_For_Connection()
+}
+
+void Wait_For_Connection()
+{
+   int counter = 0;
+   while (WiFi.status() != WL_CONNECTED){
+      if(counter >= 20)
+      {
         Serial.println("No connection in 10 seconds. Retrying connection");
-        WiFi.begin(ssid);
+        WiFi.begin(ssid, wifi_password);
         counter = 0;
-    }
-    delay(500);
-    Serial.print(".");
-    counter += 1;
-  }
+      }
+      delay(500);
+      Serial.print(".");
+      counter += 1;
+   }
   
-  if (WiFi.status() == WL_CONNECTED) {
     Serial.println("connected to " + String(ssid));
     Serial.println();
     Serial.println("WiFi connected");
     Serial.println("IP address set: ");
-    Serial.println(WiFi.localIP()); //print LAN
-  }
+    Serial.println(WiFi.localIP());
 }
