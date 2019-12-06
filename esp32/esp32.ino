@@ -1,3 +1,7 @@
+//Connects to WIFI networks and sends sensor data to Mbrace.xyz
+//Can connect to WPA2 Enterprise if username is provided and the board is Esp32
+//Writes data to SD card if available
+//Written by Kamal S. Ali and James Curtis Addy
 //Fill in the *****EDIT******
 
 #include <Ticker.h>
